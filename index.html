@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop TADS</title>
+
+    <link href="css/estilo.css" rel="stylesheet" />
+
+    <link rel="icon" href="imagens/index/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary minha-nav">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html"> <img src="imagens/SHOP-TADS.png" alt="Shop TADS" width="50">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown dropdown-usuario">
+                        <a class="nav-link dropdown-toggle" href="ss" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="imagens/login/login.png" width="30">
+                            <span id="nomeUsuario">Entrar / Cadastrar</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li id="menuLogin"><a class="dropdown-item" href="paginas/login.html">Login</a></li>
+                            <li id="menuCadastro"><a class="dropdown-item"
+                                    href="paginas/novo-usuario.html">Cadastrar</a></li>
+
+
+                            <li id="menuPerfil" style="display:none;">
+                                <a class="dropdown-item" href="paginas/meus-dados.html">Meus dados</a>
+                            </li>
+
+                            <li id="menuPedidos" style="display:none;">
+                                <a class="dropdown-item" href="paginas/meus-pedidos.html">Meus Pedidos</a>
+                            </li>
+
+
+                            <li id="menuSair" style="display:none;">
+                                <a class="dropdown-item text-danger" href="#" id="btnSair">
+                                    Sair
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="paginas/produtos.html">Produtos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="paginas/contato.html">Contato</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="paginas/carrinho.html">
+
+                            <img id="iconeCarrinho" src="imagens/carrinho/carrinho.png" width="23px" alt="Carrinho">
+
+                            <span id="badgeCarrinho" class="position-absolute badge rounded-pill bg-danger">
+                                0
+                            </span>
+
+                        </a>
+                    </li>
+
+
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Buscar produto" aria-label="Search" />
+                    <button class="btn btn-outline-success" type="submit">Pesquisar</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="principal">
+        <marquee onmouseover="this.stop()" onmouseout="this.start()" width="100%" direction="right">
+
+            <h1 style="text-align:center;">
+                Bem-vindo ao Shop TADS
+            </h1>
+
+        </marquee>
+        <div id="carouselExampleIndicators" class="carousel slide">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"
+                    aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"
+                    aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"
+                    aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="imagens/index/BANNER1.png" class="d-block w-100" alt="BANNER">
+                    <div class="botoes-banner d-flex flex-wrap gap-2">
+                        <a href="paginas/produtos.html" class="btn btn-success btn-lg">
+                            Produtos
+                        </a>
+
+                        <a href="paginas/contato.html" class="btn btn-success btn-lg">
+                            Contato
+                        </a>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="imagens/index/BANNER2.png" class="d-block w-100" alt="BANNER-2">
+                </div>
+                <div class="carousel-item">
+                    <img src="imagens/index/BANNER3.png" class="d-block w-100" alt="BANNER-3">
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+
+    </main>
+
+
+    <footer>
+
+        <div class="redes-sociais">
+
+            <a href="https://facebook.com" target="_blank">
+                <img src="imagens/redes/logo-facebook.svg" alt="Facebook">
+            </a>
+
+            <a href="https://instagram.com" target="_blank">
+                <img src="imagens/redes/logo-instagram.svg" alt="Instagram">
+            </a>
+
+            <a href="https://www.youtube.com/" target="_blank">
+                <img src="imagens/redes/logo-youtube.svg" alt="YouTube">
+            </a>
+
+        </div>
+
+        <p>&copy 2026 Shop TADS</p>
+
+    </footer>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="js/script.js">  </script>
+
+</body>
+
+</html>

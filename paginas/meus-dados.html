@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus dados</title>
+
+    <link href="../css/estilo.css" rel="stylesheet" />
+    <link rel="icon" href="../imagens/index/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary minha-nav">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html"> <img src="../imagens/SHOP-TADS.png" alt="Shop TADS"
+                    width="50">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown dropdown-usuario">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="../imagens/login/login.png" width="30">
+
+                            <span id="nomeUsuario">Entrar / Cadastrar</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li id="menuLogin"><a class="dropdown-item" href="login.html">Login</a></li>
+                            <li id="menuCadastro"><a class="dropdown-item" href="novo-usuario.html">Cadastrar</a></li>
+
+
+                            <li id="menuPerfil" style="display:none;">
+                                <a class="dropdown-item" href="meus-dados.html">Meus dados</a>
+                            </li>
+
+                            <li id="menuPedidos" style="display:none;">
+                                <a class="dropdown-item" href="meus-pedidos.html">Meus Pedidos</a>
+                            </li>
+
+                            <li id="menuSair" style="display:none;">
+                                <a class="dropdown-item text-danger" href="#" id="btnSair">
+                                    Sair
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../paginas/produtos.html">Produtos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../paginas/contato.html">Contato</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="../paginas/carrinho.html">
+
+                            <img id="iconeCarrinho" src="../imagens/carrinho/carrinho.png" width="23px" alt="Carrinho">
+
+                            <span id="badgeCarrinho" class="position-absolute badge rounded-pill bg-danger">
+                                0
+                            </span>
+
+                        </a>
+                    </li>
+
+
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Buscar produto" aria-label="Search" />
+                    <button class="btn btn-outline-success" type="submit">Pesquisar</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="principal">
+
+        <div class="container py-5">
+
+            <div class="row justify-content-center">
+
+                <div class="col-md-6">
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+                            <h2 class="card-title text-center mb-4">
+                                Meus dados
+                            </h2>
+
+                            <p>
+                                <strong>Nome:</strong>
+                                <span id="dadosNome"></span>
+                            </p>
+
+                            <p>
+                                <strong>E-mail:</strong>
+                                <span id="dadosEmail"></span>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="../js/script.js">  </script>
+</body>
+
+</html>

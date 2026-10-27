@@ -1,0 +1,615 @@
+// BANCO DADOS DE USUÁRIOS
+let usuarios = [
+    {
+        nome: "Administrador",
+        email: "admin@shop.com",
+        senha: "123456"
+    },
+    {
+        nome: "Anderson",
+        email: "anderson@email.com",
+        senha: "123"
+    },
+    {
+        nome: "ADM",
+        email: "a@mail",
+        senha: "123"
+    }
+];
+
+const usuariosSalvos = localStorage.getItem("usuarios");
+
+if (usuariosSalvos) {
+    usuarios = JSON.parse(usuariosSalvos);
+}
+
+// LOGIN do usuário
+const formulario = document.querySelector("#form-login");
+
+if (formulario) {
+
+    formulario.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const email = document.querySelector("#email").value.toUpperCase();
+        const senha = document.querySelector("#senha").value;
+
+        const usuario = usuarios.find(function (u) {
+            return u.email.toLocaleUpperCase() === email && u.senha === senha;
+        });
+
+        if (usuario) {
+
+            localStorage.setItem("usuarioLogado", JSON.stringify(usuario));
+
+            const modal = new bootstrap.Modal(
+                document.getElementById("modalSucesso")
+            );
+
+            modal.show();
+
+            setTimeout(function () { window.location.href = "../index.html"; }, 3000);
+
+        } else {
+
+            const modalErro = new bootstrap.Modal(
+                document.getElementById("modalErro")
+            );
+            modalErro.show();
+
+        }
+
+    });
+
+}
+
+// Atualizar o navbar 
+function atualizarNavbar() {
+
+    const dados = localStorage.getItem("usuarioLogado");
+
+    if (!dados) return;
+
+    const usuario = JSON.parse(dados);
+
+    document.querySelector("#nomeUsuario").innerHTML = usuario.nome;
+
+    document.querySelector("#menuLogin").style.display = "none";
+    document.querySelector("#menuCadastro").style.display = "none";
+
+    document.querySelector("#menuPerfil").style.display = "block";
+    document.querySelector("#menuPedidos").style.display = "block";
+    document.querySelector("#menuSair").style.display = "block";
+
+}
+
+atualizarNavbar();
+
+
+//botão  sair da conta de usuário
+const btnSair = document.querySelector("#btnSair");
+
+if (btnSair) {
+
+    btnSair.addEventListener("click", function () {
+
+        localStorage.removeItem("usuarioLogado");
+
+        window.location.href = "../index.html";
+
+    });
+
+}
+
+//Check mostrar senha
+const mostrar = document.querySelector("#mostrarSenha");
+
+if (mostrar) {
+
+    mostrar.addEventListener("change", function () {
+
+        const senha = document.querySelector("#senha");
+
+        if (this.checked) {
+            senha.type = "text";
+        } else {
+            senha.type = "password";
+        }
+
+    });
+
+}
+
+//Cadastro de usuário
+const formularioCadastro = document.querySelector("#form-cadastro");
+
+if (formularioCadastro) {
+
+    formularioCadastro.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const nome = document.querySelector("#nome").value;
+        const email = document.querySelector("#email").value;
+        const senha = document.querySelector("#senha").value;
+        const confirmarSenha = document.querySelector("#confirmarSenha").value;
+
+        if (senha !== confirmarSenha) {
+            const modalSenha = new bootstrap.Modal(
+                document.getElementById("modalSenhaDiferente")
+            );
+            modalSenha.show();
+            return;
+        }
+
+        const usuarioExiste = usuarios.find(function (u) {
+            return u.email.toUpperCase() === email.toUpperCase();
+        });
+
+        if (usuarioExiste) {
+            const modalEmail = new bootstrap.Modal(
+                document.getElementById("modalEmailExiste")
+            );
+            modalEmail.show();
+            return;
+        }
+
+        usuarios.push({
+            nome: nome,
+            email: email,
+            senha: senha
+        });
+
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("modalCadastro")
+        );
+
+        modal.show();
+
+        formularioCadastro.reset();
+
+        setTimeout(function () {
+            window.location.href = "../index.html";
+        }, 2000);
+
+    });
+
+}
+
+// MOSTRAR DADOS DO USUÁRIO
+const dadosUsuario = localStorage.getItem("usuarioLogado");
+
+if (dadosUsuario) {
+
+    const usuario = JSON.parse(dadosUsuario);
+
+    const dadosNome = document.querySelector("#dadosNome");
+    const dadosEmail = document.querySelector("#dadosEmail");
+    const nomeUsuEnd = document.querySelector("#nomeUsu");
+
+    //nome endereço carrinho
+    if (dadosNome) {
+        dadosNome.textContent = usuario.nome;
+    }
+
+    if (dadosEmail) {
+        dadosEmail.textContent = usuario.email;
+    }
+    if (nomeUsuEnd) {
+        nomeUsuEnd.textContent = usuario.nome;
+    }
+
+}
+
+
+// Banco de dados dos produtos
+const produtos = [
+
+    {
+        id: 1,
+        nome: "Notebook Lenovo Ideapad Slim 3",
+        descricao: "Notebook Lenovo Ideapad Slim 3 15irh10 Intel Core i7-13620h 16gb 512gb SSD WINDOWS 11 15.3 - 83ns0000br Luna Grey",
+        preco: 4899.00,
+        imagem: "../imagens/produtos/Notebook-Lenovo-Ideapad-Slim-3.webp"
+    },
+
+    {
+        id: 2,
+        nome: "Processador AMD Ryzen 7 5700X",
+        descricao: "Processador AMD Ryzen 7 5700X, 3.4GHz (4.6GHz Max Turbo), Cache 36MB, 8 Núcleos, 16 Threads, AM4, Sem Vídeo Integrado",
+        preco: 1999.00,
+        imagem: "../imagens/produtos/processador-amd-ryzen-7-5700x.webp"
+    },
+
+    {
+        id: 3,
+        nome: "Monitor Gamer ASUS ROG Strix",
+        descricao: "Monitor Gamer ASUS ROG Strix OLED 27, QHD, 280Hz, 0.03ms, QD-OLED, G-SYNC, Adaptive-Sync",
+        preco: 2499.00,
+        imagem: "../imagens/produtos/monitor-gamer-asus.webp"
+    },
+
+    {
+        id: 4,
+        nome: "SSD Kingston A400 240GB",
+        descricao: "SSD Kingston A400, 240GB, SATA III, 2.5, Leitura: 500MB/s, Gravação: 350MB/s",
+        preco: 359.00,
+        imagem: "../imagens/produtos/SSD-Kingston-A400-240GB.webp"
+    },
+
+    {
+        id: 5,
+        nome: "Memória RAM Kingston Fury Beast 8GB",
+        descricao: "Memória RAM Kingston Fury Beast, 8GB, 3200MHz, DDR4, CL16, Preto",
+        preco: 629.00,
+        imagem: "../imagens/produtos/memoria-ram-kingston-fury-beast-8gb.webp"
+    },
+
+    {
+        id: 6,
+        nome: "Placa De Vídeo Vinik Amd Radeon Rx 580 8GB GDDR5",
+        descricao: "Placa De Vídeo Vinik Amd Radeon Rx 580, 8GB, GDDR5, 256 Bits",
+        preco: 890.00,
+        imagem: "../imagens/produtos/Placa-De-V-deo-Vinik-Amd-Radeon-Rx-580-8GB.webp"
+    },
+
+    {
+        id: 7,
+        nome: "Teclado Mecânico Gamer HyperX Alloy Origins",
+        descricao: "Teclado Mecânico Gamer HyperX Alloy Origins Core, RGB, Switch HyperX Red, USB Tipo-C, ABNT2, Preto",
+        preco: 399.00,
+        imagem: "../imagens/produtos/teclado-mecanico-gamer-hyperx-alloy-origins.webp"
+    },
+
+    {
+        id: 8,
+        nome: "Mouse Gamer Redragon Invader M719",
+        descricao: "Mouse Gamer Redragon Invader M719, RGB, 7 Botões, 10000DPI - RGB",
+        preco: 99.00,
+        imagem: "../imagens/produtos/mouse-gamer-redragon-invader.webp"
+    }
+
+];
+
+//Listar os produtos
+const listaProdutos = document.querySelector("#listaProdutos");
+
+if (listaProdutos) {
+
+    produtos.forEach(function (produto) {
+
+        listaProdutos.innerHTML += `
+        
+            <div class="col-md-6 col-lg-3">
+
+                <div class="card h-100">
+
+                    <img src="${produto.imagem}"
+                        class="card-img-top imagem-produto"
+                        alt="${produto.nome}">
+
+                    <div class="card-body d-flex flex-column">
+
+                        <h5 class="card-title">
+                            ${produto.nome}
+                        </h5>
+
+                        <p class="card-text">
+                            ${produto.descricao}
+                        </p>
+
+                        <p class="mt-auto">
+                            <strong>R$ ${produto.preco.toFixed(2).replace(".", ",")}</strong>
+                        </p>
+
+                        <button class="btn btn-success btn-adicionar" data-id="${produto.id}">
+                            Adicionar ao carrinho
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
+//TOAST DO CARRINHO
+const elementoToast = document.querySelector("#toastCarrinho");
+
+let toastCarrinho = null;
+
+if (elementoToast && typeof bootstrap !== "undefined") {
+    toastCarrinho = new bootstrap.Toast(elementoToast, {
+        delay: 3000
+    });
+}
+
+//Botão adicionar produto ao carrinho
+const botoesAdicionar = document.querySelectorAll(".btn-adicionar");
+
+botoesAdicionar.forEach(function (botao) {
+
+    botao.addEventListener("click", function () {
+
+        const id = Number(botao.dataset.id);
+
+        const produto = produtos.find(function (p) {
+            return p.id === id;
+        });
+
+        let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+        const produtoCarrinho = carrinho.find(function (p) {
+            return p.id === produto.id;
+        });
+
+        if (produtoCarrinho) {
+
+            produtoCarrinho.quantidade++;
+
+        } else {
+
+            carrinho.push({
+                id: produto.id,
+                nome: produto.nome,
+                preco: produto.preco,
+                imagem: produto.imagem,
+                quantidade: 1
+            });
+
+        }
+
+        localStorage.setItem("carrinho", JSON.stringify(carrinho));
+
+        atualizarCarrinho();
+
+        if (toastCarrinho) {
+            toastCarrinho.show();
+        }
+
+    });
+
+});
+
+
+//Atualizar o badge
+function atualizarCarrinho() {
+
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+    const badge = document.querySelector("#badgeCarrinho");
+
+    if (badge) {
+
+        let quantidadeTotal = 0;
+
+        carrinho.forEach(function (produto) {
+            quantidadeTotal += produto.quantidade;
+        });
+
+        badge.textContent = quantidadeTotal;
+    }
+}
+
+atualizarCarrinho();
+
+
+//Mostrar carrinho
+function mostrarCarrinho() {
+
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+    const listaCarrinho = document.querySelector("#listaCarrinho");
+
+    if (!listaCarrinho) return;
+
+    listaCarrinho.innerHTML = "";
+
+    if (carrinho.length === 0) {
+
+        listaCarrinho.innerHTML = `
+        <div class="text-center p-4">
+
+            <h3>🛒 Seu carrinho está vazio.</h3>
+
+        </div>
+    `;
+
+        return;
+    }
+
+    carrinho.forEach(function (produto) {
+
+        listaCarrinho.innerHTML += `
+
+            <div class="item">
+
+                <img src="${produto.imagem}"
+                    alt="${produto.nome}"
+                    width="90">
+
+                <div class="info-item">
+
+                    <h3>${produto.nome}</h3>
+
+                    <span>
+                        R$ ${produto.preco.toFixed(2).replace(".", ",")}
+                    </span>
+
+                </div>
+
+                <div class="qtd">
+
+                    <label>Qtd.</label>
+
+                    <input type="number"
+                        class="input-quantidade"
+                        data-id="${produto.id}"
+                        value="${produto.quantidade}"
+                        min="1">
+
+                    <button class="btn btn-danger btn-sm btn-remover" data-id="${produto.id}" title="Remover produto">
+                        &times;
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+    ativarCamposQuantidade();
+}
+
+mostrarCarrinho();
+
+
+
+//Atualizar resumo do carrinho
+function atualizarResumoCarrinho() {
+
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+    let quantidadeTotal = 0;
+    let subtotal = 0;
+
+    carrinho.forEach(function (produto) {
+
+        quantidadeTotal += produto.quantidade;
+
+        subtotal += produto.preco * produto.quantidade;
+
+    });
+
+    const quantidade = document.querySelector("#quantidadeCarrinho");
+    const subtotalElemento = document.querySelector("#subtotalCarrinho");
+    const total = document.querySelector("#totalCarrinho");
+
+    if (quantidade) {
+        quantidade.textContent = quantidadeTotal;
+    }
+
+    if (subtotalElemento) {
+        subtotalElemento.textContent =
+            "R$ " + subtotal.toFixed(2).replace(".", ",");
+    }
+
+    if (total) {
+        total.textContent =
+            "R$ " + subtotal.toFixed(2).replace(".", ",");
+    }
+
+}
+
+atualizarResumoCarrinho();
+
+
+function ativarCamposQuantidade() {
+
+    const camposQuantidade = document.querySelectorAll(".input-quantidade");
+
+    camposQuantidade.forEach(function (campo) {
+
+        campo.addEventListener("change", function () {
+
+            const id = Number(campo.dataset.id);
+
+            const novaQuantidade = Number(campo.value);
+
+            let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+            const produto = carrinho.find(function (p) {
+                return p.id === id;
+            });
+
+            if (produto) {
+
+                if (novaQuantidade === 0) {
+
+                    carrinho = carrinho.filter(function (p) {
+                        return p.id !== id;
+                    });
+
+                } else {
+
+                    produto.quantidade = novaQuantidade;
+
+                }
+
+            }
+
+            localStorage.setItem("carrinho", JSON.stringify(carrinho));
+
+            atualizarCarrinho();
+
+            atualizarResumoCarrinho();
+
+        });
+
+    });
+
+}
+
+
+//Remover produto do carrinho
+const botoesRemover = document.querySelectorAll(".btn-remover");
+
+botoesRemover.forEach(function (botao) {
+
+    botao.addEventListener("click", function () {
+
+        const id = Number(botao.dataset.id);
+
+        let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+        carrinho = carrinho.filter(function (produto) {
+            return produto.id !== id;
+        });
+
+        localStorage.setItem("carrinho", JSON.stringify(carrinho));
+
+        location.reload();
+
+    });
+
+});
+
+
+//FINALIZAR PEDIDO
+const btnFinalizar = document.querySelector("#btnFinalizar");
+
+if (btnFinalizar) {
+
+    btnFinalizar.addEventListener("click", function (e) {
+
+        const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+        if (carrinho.length === 0) {
+
+            e.preventDefault();
+
+            const modalCarrinhoVazio = new bootstrap.Modal(
+                document.getElementById("modalCarrinhoVazio")
+            );
+            modalCarrinhoVazio.show();
+
+            return;
+
+        }
+
+        localStorage.setItem("pedidoFinalizado", JSON.stringify(carrinho));
+
+    });
+
+}
+
+
