@@ -1,3 +1,22 @@
+
+
+const API_BASE = "https://ppw-1-tads.vercel.app";
+
+async function requisicaoAPI(endpoint, opcoes = {}) {
+    const resposta = await fetch(API_BASE + endpoint, opcoes);
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+        throw new Error("Erro HTTP: " + resposta.status);
+    }
+
+    return dados;
+}
+
+
+
+
 // BANCO DADOS DE USUÁRIOS
 let usuarios = [
     {
@@ -205,121 +224,84 @@ if (dadosUsuario) {
 }
 
 
-// Banco de dados dos produtos
-const produtos = [
 
-    {
-        id: 1,
-        nome: "Notebook Lenovo Ideapad Slim 3",
-        descricao: "Notebook Lenovo Ideapad Slim 3 15irh10 Intel Core i7-13620h 16gb 512gb SSD WINDOWS 11 15.3 - 83ns0000br Luna Grey",
-        preco: 4899.00,
-        imagem: "../imagens/produtos/Notebook-Lenovo-Ideapad-Slim-3.webp"
-    },
+/**
+ * Lista de produtos carregados da API.
+ * Começa vazia e será preenchida pela requisição.
+ */
+let produtos = [];
 
-    {
-        id: 2,
-        nome: "Processador AMD Ryzen 7 5700X",
-        descricao: "Processador AMD Ryzen 7 5700X, 3.4GHz (4.6GHz Max Turbo), Cache 36MB, 8 Núcleos, 16 Threads, AM4, Sem Vídeo Integrado",
-        preco: 1999.00,
-        imagem: "../imagens/produtos/processador-amd-ryzen-7-5700x.webp"
-    },
-
-    {
-        id: 3,
-        nome: "Monitor Gamer ASUS ROG Strix",
-        descricao: "Monitor Gamer ASUS ROG Strix OLED 27, QHD, 280Hz, 0.03ms, QD-OLED, G-SYNC, Adaptive-Sync",
-        preco: 2499.00,
-        imagem: "../imagens/produtos/monitor-gamer-asus.webp"
-    },
-
-    {
-        id: 4,
-        nome: "SSD Kingston A400 240GB",
-        descricao: "SSD Kingston A400, 240GB, SATA III, 2.5, Leitura: 500MB/s, Gravação: 350MB/s",
-        preco: 359.00,
-        imagem: "../imagens/produtos/SSD-Kingston-A400-240GB.webp"
-    },
-
-    {
-        id: 5,
-        nome: "Memória RAM Kingston Fury Beast 8GB",
-        descricao: "Memória RAM Kingston Fury Beast, 8GB, 3200MHz, DDR4, CL16, Preto",
-        preco: 629.00,
-        imagem: "../imagens/produtos/memoria-ram-kingston-fury-beast-8gb.webp"
-    },
-
-    {
-        id: 6,
-        nome: "Placa De Vídeo Vinik Amd Radeon Rx 580 8GB GDDR5",
-        descricao: "Placa De Vídeo Vinik Amd Radeon Rx 580, 8GB, GDDR5, 256 Bits",
-        preco: 890.00,
-        imagem: "../imagens/produtos/Placa-De-V-deo-Vinik-Amd-Radeon-Rx-580-8GB.webp"
-    },
-
-    {
-        id: 7,
-        nome: "Teclado Mecânico Gamer HyperX Alloy Origins",
-        descricao: "Teclado Mecânico Gamer HyperX Alloy Origins Core, RGB, Switch HyperX Red, USB Tipo-C, ABNT2, Preto",
-        preco: 399.00,
-        imagem: "../imagens/produtos/teclado-mecanico-gamer-hyperx-alloy-origins.webp"
-    },
-
-    {
-        id: 8,
-        nome: "Mouse Gamer Redragon Invader M719",
-        descricao: "Mouse Gamer Redragon Invader M719, RGB, 7 Botões, 10000DPI - RGB",
-        preco: 99.00,
-        imagem: "../imagens/produtos/mouse-gamer-redragon-invader.webp"
-    }
-
-];
-
-//Listar os produtos
+// Listar os produtos
 const listaProdutos = document.querySelector("#listaProdutos");
 
-if (listaProdutos) {
+async function listarProdutos() {
 
-    produtos.forEach(function (produto) {
+    if (!listaProdutos) return;
 
-        listaProdutos.innerHTML += `
-        
-            <div class="col-md-6 col-lg-3">
+    try {
 
-                <div class="card h-100">
+        const dados = await requisicaoAPI("/api/products");
 
-                    <img src="${produto.imagem}"
-                        class="card-img-top imagem-produto"
-                        alt="${produto.nome}">
+        produtos = dados.products;
 
-                    <div class="card-body d-flex flex-column">
+        listaProdutos.innerHTML = "";
 
-                        <h5 class="card-title">
-                            ${produto.nome}
-                        </h5>
+        produtos.forEach(function (produto) {
 
-                        <p class="card-text">
-                            ${produto.descricao}
-                        </p>
+            listaProdutos.innerHTML += `
+            
+                <div class="col-md-6 col-lg-3">
 
-                        <p class="mt-auto">
-                            <strong>R$ ${produto.preco.toFixed(2).replace(".", ",")}</strong>
-                        </p>
+                    <div class="card h-100">
 
-                        <button class="btn btn-success btn-adicionar" data-id="${produto.id}">
-                            Adicionar ao carrinho
-                        </button>
+                        <img src="${produto.image || produto.imageUrl || "../imagens/produtos/sem-imagem.png"}"
+                            class="card-img-top imagem-produto"
+                            alt="${produto.name}">
+
+                        <div class="card-body d-flex flex-column">
+
+                            <h5 class="card-title">
+                                ${produto.name}
+                            </h5>
+
+                            <p class="card-text">
+                                ${produto.description}
+                            </p>
+
+                            <p class="mt-auto">
+                                <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
+                            </p>
+
+                            <button class="btn btn-success btn-adicionar" data-id="${produto.id}">
+                                Adicionar ao carrinho
+                            </button>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-            </div>
+            `;
 
+        });
+
+    } catch (erro) {
+
+        console.error("Erro ao carregar produtos:", erro);
+
+        listaProdutos.innerHTML = `
+            <div class="col-12 text-center">
+                <p>Não foi possível carregar os produtos. Tente novamente.</p>
+            </div>
         `;
 
-    });
+    }
 
 }
+
+listarProdutos();
+
 
 //TOAST DO CARRINHO
 const elementoToast = document.querySelector("#toastCarrinho");
