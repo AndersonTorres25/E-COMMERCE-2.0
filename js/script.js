@@ -314,18 +314,23 @@ if (elementoToast && typeof bootstrap !== "undefined") {
     });
 }
 
-//Botão adicionar produto ao carrinho
-const botoesAdicionar = document.querySelectorAll(".btn-adicionar");
 
-botoesAdicionar.forEach(function (botao) {
+ // Botão adicionar produto ao carrinho
+if (listaProdutos) {
 
-    botao.addEventListener("click", function () {
+    listaProdutos.addEventListener("click", function (e) {
+
+        const botao = e.target.closest(".btn-adicionar");
+
+        if (!botao) return;
 
         const id = Number(botao.dataset.id);
 
         const produto = produtos.find(function (p) {
             return p.id === id;
         });
+
+        if (!produto) return;
 
         let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
@@ -341,9 +346,9 @@ botoesAdicionar.forEach(function (botao) {
 
             carrinho.push({
                 id: produto.id,
-                nome: produto.nome,
-                preco: produto.preco,
-                imagem: produto.imagem,
+                nome: produto.name,
+                preco: Number(produto.price),
+                imagem: produto.image || produto.imageUrl || "../imagens/produtos/sem-imagem.png",
                 quantidade: 1
             });
 
@@ -359,8 +364,7 @@ botoesAdicionar.forEach(function (botao) {
 
     });
 
-});
-
+}
 
 //Atualizar o badge
 function atualizarCarrinho() {
