@@ -253,6 +253,7 @@ async function listarProdutos() {
                 <div class="col-md-6 col-lg-3">
 
                     <div class="card h-100">
+                    <input type="hidden" class="produto-id" value="${produto.id}">
 
                         <img src="${produto.image}"
                             class="card-img-top imagem-produto"
@@ -260,13 +261,18 @@ async function listarProdutos() {
 
                         <div class="card-body d-flex flex-column">
 
-                            <h5 class="card-title">
-                                ${produto.name}
-                            </h5>
+                           <h5 class="card-title">${produto.name}</h5>
 
-                            <p class="card-text">
-                                ${produto.description}
+                            <p class="card-text">${produto.description}</p>
+
+                            <p class="mb-2">
+                                <strong>Categoria:</strong> ${produto.category}
                             </p>
+
+                            ${produto.stock === 0
+                                ? '<p class="text-danger fw-bold">Produto esgotado</p>'
+                                : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
+                            }
 
                             <p class="mt-auto">
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
@@ -343,6 +349,7 @@ async function buscarProdutos() {
             listaProdutos.innerHTML += `
                 <div class="col-md-6 col-lg-3">
                     <div class="card h-100">
+                    <input type="hidden" class="produto-id" value="${produto.id}">
 
                         <img src="${produto.image}"
                             class="card-img-top imagem-produto"
@@ -353,6 +360,15 @@ async function buscarProdutos() {
                             <h5 class="card-title">${produto.name}</h5>
 
                             <p class="card-text">${produto.description}</p>
+
+                            <p class="mb-2">
+                                <strong>Categoria:</strong> ${produto.category}
+                            </p>
+
+                            ${produto.stock === 0
+                                ? '<p class="text-danger fw-bold">Produto esgotado</p>'
+                                : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
+                            }
 
                             <p class="mt-auto">
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
