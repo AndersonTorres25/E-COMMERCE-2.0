@@ -107,19 +107,29 @@ atualizarNavbar();
 
 
 //botão  sair da conta de usuário
+
 const btnSair = document.querySelector("#btnSair");
 
 if (btnSair) {
 
-    btnSair.addEventListener("click", function () {
+    btnSair.addEventListener("click", function (e) {
+
+        e.preventDefault();
 
         localStorage.removeItem("usuarioLogado");
 
-        window.location.href = "../index.html";
+        const linkInicio = document.querySelector(".navbar-brand");
+
+        if (linkInicio) {
+            window.location.href = linkInicio.href;
+        } else {
+            window.location.href = "../index.html";
+        }
 
     });
 
 }
+
 
 //Check mostrar senha
 const mostrar = document.querySelector("#mostrarSenha");
@@ -720,6 +730,26 @@ if (btnFinalizar) {
 
     btnFinalizar.addEventListener("click", function (e) {
 
+        // Verifica se existe um usuário logado
+        const dadosUsuario = localStorage.getItem("usuarioLogado");
+
+        if (!dadosUsuario) {
+
+            e.preventDefault();
+
+            alert("Você precisa entrar na sua conta para finalizar o pedido.");
+
+            const linkLogin = document.querySelector("#menuLogin a");
+
+            if (linkLogin) {
+                window.location.href = linkLogin.href;
+            }
+
+            return;
+
+        }
+
+        // Verifica se o carrinho possui produtos
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
         if (carrinho.length === 0) {
@@ -729,12 +759,14 @@ if (btnFinalizar) {
             const modalCarrinhoVazio = new bootstrap.Modal(
                 document.getElementById("modalCarrinhoVazio")
             );
+
             modalCarrinhoVazio.show();
 
             return;
 
         }
 
+        // Registra os produtos para a finalização
         localStorage.setItem("pedidoFinalizado", JSON.stringify(carrinho));
 
     });
