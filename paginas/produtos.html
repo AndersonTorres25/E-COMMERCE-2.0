@@ -79,13 +79,26 @@
 
                 </ul>
 
-                <form class="d-flex" role="search" id="formBusca">
-                    <input class="form-control me-2" type="search" id="campoBusca" placeholder="Buscar produto"
+
+                <form class="d-flex gap-2" role="search" id="formBusca">
+                    <input class="form-control" type="search" id="campoBusca" placeholder="Buscar produto"
                         aria-label="Buscar produto" />
+
+                    <select class="form-select" id="filtroCategoria" aria-label="Filtrar por categoria">
+                        <option value="">Todas as categorias</option>
+                        <option value="Vestuário">Vestuário</option>
+                        <option value="Eletrônicos">Eletrônicos</option>
+                        <option value="Calçados">Calçados</option>
+                        <option value="Eletrodomésticos">Eletrodomésticos</option>
+                        <option value="Acessórios">Acessórios</option>
+                        <option value="Móveis">Móveis</option>
+                    </select>
 
                     <button class="btn btn-outline-success" type="submit">
                         Pesquisar
                     </button>
+                </form>
+
                 </form>
 
             </div>

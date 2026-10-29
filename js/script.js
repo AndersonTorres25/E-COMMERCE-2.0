@@ -303,80 +303,130 @@ async function listarProdutos() {
 listarProdutos();
 
 
+
 const formBusca = document.querySelector("#formBusca");
 const campoBusca = document.querySelector("#campoBusca");
+const filtroCategoria = document.querySelector("#filtroCategoria");
 
-if (formBusca && campoBusca) {
+// Guarda o temporizador da busca
+let temporizadorBusca;
 
-    formBusca.addEventListener("submit", async function (e) {
+async function buscarProdutos() {
 
-        e.preventDefault();
+    const termo = campoBusca.value.trim();
+    const categoria = filtroCategoria.value;
 
-        const termo = campoBusca.value.trim();
+    const parametros = new URLSearchParams();
 
-        try {
+    if (termo) {
+        parametros.append("search", termo);
+    }
 
-            const dados = await requisicaoAPI("/api/products?search=" + encodeURIComponent(termo));
+    if (categoria) {
+        parametros.append("category", categoria);
+    }
 
-            produtos = dados.products;
+    const consulta = parametros.toString();
 
-            listaProdutos.innerHTML = "";
+    const endpoint = consulta ? "/api/products?" + consulta : "/api/products";
 
-            produtos.forEach(function (produto) {
+    try {
 
-                listaProdutos.innerHTML += `
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100">
+        const dados = await requisicaoAPI(endpoint);
 
-                            <img src="${produto.image}"
-                                class="card-img-top imagem-produto"
-                                alt="${produto.name}">
+        produtos = dados.products;
 
-                            <div class="card-body d-flex flex-column">
+        listaProdutos.innerHTML = "";
 
-                                <h5 class="card-title">${produto.name}</h5>
+        produtos.forEach(function (produto) {
 
-                                <p class="card-text">${produto.description}</p>
+            listaProdutos.innerHTML += `
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100">
 
-                                <p class="mt-auto">
-                                    <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
-                                </p>
+                        <img src="${produto.image}"
+                            class="card-img-top imagem-produto"
+                            alt="${produto.name}">
 
-                                <button class="btn btn-success btn-adicionar"
-                                    data-id="${produto.id}">
-                                    Adicionar ao carrinho
-                                </button>
+                        <div class="card-body d-flex flex-column">
 
-                            </div>
+                            <h5 class="card-title">${produto.name}</h5>
+
+                            <p class="card-text">${produto.description}</p>
+
+                            <p class="mt-auto">
+                                <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
+                            </p>
+
+                            <button class="btn btn-success btn-adicionar"
+                                data-id="${produto.id}">
+                                Adicionar ao carrinho
+                            </button>
+
                         </div>
                     </div>
-                `;
-
-            });
-
-            if (produtos.length === 0) {
-                listaProdutos.innerHTML = `
-                    <div class="col-12 text-center">
-                        <p>Nenhum produto encontrado.</p>
-                    </div>
-                `;
-            }
-
-        } catch (erro) {
-
-            console.error("Erro na busca:", erro);
-
-            listaProdutos.innerHTML = `
-                <div class="col-12 text-center">
-                    <p>Não foi possível pesquisar os produtos.</p>
                 </div>
             `;
 
+        });
+
+        if (produtos.length === 0) {
+            listaProdutos.innerHTML = `
+                <div class="col-12 text-center">
+                    <p>Nenhum produto encontrado.</p>
+                </div>
+            `;
         }
+
+    } catch (erro) {
+
+        console.error("Erro ao buscar produtos:", erro);
+
+        listaProdutos.innerHTML = `
+            <div class="col-12 text-center">
+                <p>Não foi possível carregar os produtos.</p>
+            </div>
+        `;
+
+    }
+
+}
+
+// Busca ao enviar o formulário
+if (formBusca && campoBusca && filtroCategoria) {
+
+    formBusca.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        clearTimeout(temporizadorBusca);
+
+        buscarProdutos();
+
+    });
+
+    // Debounce: espera 500 ms após a última tecla
+    campoBusca.addEventListener("input", function () {
+
+        clearTimeout(temporizadorBusca);
+
+        temporizadorBusca = setTimeout(function () {
+            buscarProdutos();
+        }, 500);
+
+    });
+
+    // Filtra imediatamente ao trocar a categoria
+    filtroCategoria.addEventListener("change", function () {
+
+        clearTimeout(temporizadorBusca);
+
+        buscarProdutos();
 
     });
 
 }
+
 
 
 
