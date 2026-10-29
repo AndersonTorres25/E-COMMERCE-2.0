@@ -254,7 +254,7 @@ async function listarProdutos() {
 
                     <div class="card h-100">
 
-                        <img src="${produto.image || produto.imageUrl || "../imagens/produtos/sem-imagem.png"}"
+                        <img src="${produto.image}"
                             class="card-img-top imagem-produto"
                             alt="${produto.name}">
 
@@ -303,6 +303,83 @@ async function listarProdutos() {
 listarProdutos();
 
 
+const formBusca = document.querySelector("#formBusca");
+const campoBusca = document.querySelector("#campoBusca");
+
+if (formBusca && campoBusca) {
+
+    formBusca.addEventListener("submit", async function (e) {
+
+        e.preventDefault();
+
+        const termo = campoBusca.value.trim();
+
+        try {
+
+            const dados = await requisicaoAPI("/api/products?search=" + encodeURIComponent(termo));
+
+            produtos = dados.products;
+
+            listaProdutos.innerHTML = "";
+
+            produtos.forEach(function (produto) {
+
+                listaProdutos.innerHTML += `
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100">
+
+                            <img src="${produto.image}"
+                                class="card-img-top imagem-produto"
+                                alt="${produto.name}">
+
+                            <div class="card-body d-flex flex-column">
+
+                                <h5 class="card-title">${produto.name}</h5>
+
+                                <p class="card-text">${produto.description}</p>
+
+                                <p class="mt-auto">
+                                    <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
+                                </p>
+
+                                <button class="btn btn-success btn-adicionar"
+                                    data-id="${produto.id}">
+                                    Adicionar ao carrinho
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            });
+
+            if (produtos.length === 0) {
+                listaProdutos.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p>Nenhum produto encontrado.</p>
+                    </div>
+                `;
+            }
+
+        } catch (erro) {
+
+            console.error("Erro na busca:", erro);
+
+            listaProdutos.innerHTML = `
+                <div class="col-12 text-center">
+                    <p>Não foi possível pesquisar os produtos.</p>
+                </div>
+            `;
+
+        }
+
+    });
+
+}
+
+
+
 //TOAST DO CARRINHO
 const elementoToast = document.querySelector("#toastCarrinho");
 
@@ -315,7 +392,7 @@ if (elementoToast && typeof bootstrap !== "undefined") {
 }
 
 
- // Botão adicionar produto ao carrinho
+// Botão adicionar produto ao carrinho
 if (listaProdutos) {
 
     listaProdutos.addEventListener("click", function (e) {
@@ -348,7 +425,7 @@ if (listaProdutos) {
                 id: produto.id,
                 nome: produto.name,
                 preco: Number(produto.price),
-                imagem: produto.image || produto.imageUrl || "../imagens/produtos/sem-imagem.png",
+                imagem: produto.image,
                 quantidade: 1
             });
 
