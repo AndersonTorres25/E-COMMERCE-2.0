@@ -329,9 +329,9 @@ async function listarProdutos() {
                             </p>
 
                             ${produto.stock === 0
-                                ? '<p class="text-danger fw-bold">Produto esgotado</p>'
-                                : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
-                            }
+                    ? '<p class="text-danger fw-bold">Produto esgotado</p>'
+                    : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
+                }
 
                             <p class="mt-auto">
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
@@ -427,9 +427,9 @@ async function buscarProdutos() {
                             </p>
 
                             ${produto.stock === 0
-                                ? '<p class="text-danger fw-bold">Produto esgotado</p>'
-                                : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
-                            }
+                    ? '<p class="text-danger fw-bold">Produto esgotado</p>'
+                    : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
+                }
 
                             <p class="mt-auto">
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
@@ -664,8 +664,18 @@ function mostrarCarrinho() {
 mostrarCarrinho();
 
 
+function formatarMoeda(valor) {
+    return "R$ " + valor.toFixed(2).replace(".", ",");
+}
+
 
 //Atualizar resumo do carrinho
+let freteSelecionado = 0;
+const campoCEP = document.querySelector("#cep");
+const btnCalcularFrete = document.querySelector("#btnCalcularFrete");
+const opcoesFrete = document.querySelector("#opcoesFrete");
+const valorFrete = document.querySelector("#valorFrete");
+const btnRemoverFrete = document.querySelector("#btnRemoverFrete");
 function atualizarResumoCarrinho() {
 
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
@@ -690,13 +700,19 @@ function atualizarResumoCarrinho() {
     }
 
     if (subtotalElemento) {
-        subtotalElemento.textContent =
-            "R$ " + subtotal.toFixed(2).replace(".", ",");
+        subtotalElemento.textContent = formatarMoeda(subtotal);
+    }
+
+    if (valorFrete) {
+        valorFrete.textContent = formatarMoeda(freteSelecionado);
     }
 
     if (total) {
-        total.textContent =
-            "R$ " + subtotal.toFixed(2).replace(".", ",");
+
+        const valorTotal = subtotal + freteSelecionado;
+
+        total.textContent = formatarMoeda(valorTotal);
+
     }
 
 }
@@ -801,7 +817,6 @@ if (btnFinalizar) {
 
         }
 
-        // Verifica se o carrinho possui produtos
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
         if (carrinho.length === 0) {
@@ -818,7 +833,6 @@ if (btnFinalizar) {
 
         }
 
-        // Registra os produtos para a finalização
         localStorage.setItem("pedidoFinalizado", JSON.stringify(carrinho));
 
     });
@@ -826,3 +840,141 @@ if (btnFinalizar) {
 }
 
 
+// CÁLCULO DO FRETE
+if (btnCalcularFrete) {
+
+    btnCalcularFrete.addEventListener("click", async function () {
+        freteSelecionado = 0;
+
+        atualizarResumoCarrinho();
+
+        opcoesFrete.innerHTML = "";
+
+        valorFrete.textContent = formatarMoeda(0);
+
+        const cep = campoCEP.value.replace(/\D/g, "");
+
+        if (cep.length !== 8) {
+
+            alert("Informe um CEP válido com 8 números.");
+
+            return;
+        }
+
+        const cepFormatado = cep.replace(
+            /^(\d{5})(\d{3})$/,
+            "$1-$2"
+        );
+
+        try {
+
+            const dados = await requisicaoAPI("/api/frete", {
+
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    cep: cepFormatado
+                })
+
+            });
+
+            opcoesFrete.innerHTML = "";
+
+            dados.fretes.forEach(function (frete, indice) {
+
+                opcoesFrete.innerHTML += `
+
+                    <div class="form-check border rounded p-3 mb-2">
+
+                        <input
+                            class="form-check-input"
+                            type="radio"
+                            name="frete"
+                            id="frete${indice}"
+                            value="${indice}"
+                        >
+
+                        <label class="form-check-label" for="frete${indice}">
+
+                            <strong>${frete.servico}</strong>
+
+                            <br>
+
+                            Valor: R$ ${Number(frete.valor).toFixed(2).replace(".", ",")}
+
+                            <br>
+
+                            Prazo: ${frete.prazo}
+
+                        </label>
+
+                    </div>
+
+                `;
+
+            });
+
+const radiosFrete = document.querySelectorAll('input[name="frete"]');
+
+radiosFrete.forEach(function (radio) {
+
+    radio.addEventListener("change", function () {
+
+        const indice = Number(this.value);
+
+        const freteEscolhido = dados.fretes[indice];
+
+        freteSelecionado = Number(freteEscolhido.valor);
+
+        atualizarResumoCarrinho();
+
+    });
+
+});    
+
+        } catch (erro) {
+
+            console.error("Erro ao calcular frete:", erro);
+
+            if (erro.status === 400) {
+
+                alert("Formato de CEP inválido.");
+
+            } else if (erro.status === 404) {
+
+                alert("CEP não encontrado.");
+
+            } else if (erro.status === 422) {
+
+                alert("Região não atendida para entrega.");
+
+            } else {
+
+                alert(erro.message);
+
+            }
+
+        }
+
+    });
+
+}
+
+// Remover frete selecionado
+if (btnRemoverFrete) {
+
+    btnRemoverFrete.addEventListener("click", function () {
+
+        freteSelecionado = 0;
+
+        document.querySelectorAll('input[name="frete"]').forEach(function (radio) {
+            radio.checked = false;
+        });
+
+        atualizarResumoCarrinho();
+
+    });
+
+}

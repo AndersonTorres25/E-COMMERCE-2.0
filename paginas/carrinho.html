@@ -86,7 +86,7 @@
 
 
                 </ul>
-                
+
             </div>
         </div>
     </nav>
@@ -126,8 +126,32 @@
                     <span id="subtotalCarrinho">R$ 0,00</span>
                 </p>
 
+                <div class="mb-3">
+
+                    <label for="cep" class="form-label">
+                        <strong>Calcular Frete</strong>
+                    </label>
+
+                    <div class="input-group">
+
+                        <input type="text" id="cep" class="form-control" placeholder="00000-000" maxlength="9">
+
+                        <button type="button" id="btnCalcularFrete" class="btn btn-outline-success">
+                            Calcular Frete
+                        </button>
+
+                    </div>
+
+                    <div id="opcoesFrete" class="mt-3"></div>
+                    <button type="button" id="btnRemoverFrete" class="btn btn-sm btn-outline-danger mt-2">
+                        Remover frete
+                    </button>
+
+                </div>
+
                 <p>
-                    <strong>Frete:</strong> Grátis
+                    <strong>Frete:</strong>
+                    <span id="valorFrete">R$ 0,00</span>
                 </p>
 
                 <hr>
