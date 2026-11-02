@@ -4,17 +4,20 @@ const API_BASE = "https://ppw-1-tads.vercel.app";
 
 async function requisicaoAPI(endpoint, opcoes = {}) {
     const resposta = await fetch(API_BASE + endpoint, opcoes);
-
     const dados = await resposta.json();
 
     if (!resposta.ok) {
-        throw new Error("Erro HTTP: " + resposta.status);
+        const erro = new Error(
+            dados.mensagem || "Erro HTTP: " + resposta.status
+        );
+
+        erro.status = resposta.status;
+
+        throw erro;
     }
 
     return dados;
 }
-
-
 
 
 // BANCO DADOS DE USUÁRIOS
@@ -46,41 +49,67 @@ if (usuariosSalvos) {
 const formulario = document.querySelector("#form-login");
 
 if (formulario) {
-
-    formulario.addEventListener("submit", function (e) {
-
+    formulario.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        const email = document.querySelector("#email").value.toUpperCase();
+        const email = document.querySelector("#email").value;
         const senha = document.querySelector("#senha").value;
 
-        const usuario = usuarios.find(function (u) {
-            return u.email.toLocaleUpperCase() === email && u.senha === senha;
-        });
+        try {
+            const dados = await requisicaoAPI("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    senha: senha
+                })
+            });
+            console.log("Resposta da API:", dados);
 
-        if (usuario) {
+            if (dados.sucesso === false || !dados.usuario) {
+                const erro = new Error(
+                    dados.mensagem || "E-mail ou senha inválidos."
+                );
 
-            localStorage.setItem("usuarioLogado", JSON.stringify(usuario));
+                erro.status = 401;
+                throw erro;
+            }
 
+            // Salva os dados do usuário logado
+            localStorage.setItem(
+                "usuarioLogado",
+                JSON.stringify(dados.usuario)
+            );
+
+            // Mostra o modal de sucesso
             const modal = new bootstrap.Modal(
                 document.getElementById("modalSucesso")
             );
 
             modal.show();
 
-            setTimeout(function () { window.location.href = "../index.html"; }, 3000);
+            // Redireciona para a página inicial
+            setTimeout(function () {
+                window.location.href = "../index.html";
+            }, 3000);
 
-        } else {
+        } catch (erro) {
+            console.error("Erro no login:", erro);
 
-            const modalErro = new bootstrap.Modal(
-                document.getElementById("modalErro")
-            );
-            modalErro.show();
+            if (erro.status === 401) {
+                const modalErro = new bootstrap.Modal(
+                    document.getElementById("modalErro")
+                );
 
+                modalErro.show();
+
+            } else {
+                alert(erro.message);
+            }
         }
-
     });
-
 }
 
 // Atualizar o navbar 
@@ -107,7 +136,6 @@ atualizarNavbar();
 
 
 //botão  sair da conta de usuário
-
 const btnSair = document.querySelector("#btnSair");
 
 if (btnSair) {
@@ -155,7 +183,7 @@ const formularioCadastro = document.querySelector("#form-cadastro");
 
 if (formularioCadastro) {
 
-    formularioCadastro.addEventListener("submit", function (e) {
+    formularioCadastro.addEventListener("submit", async function (e) {
 
         e.preventDefault();
 
@@ -164,45 +192,66 @@ if (formularioCadastro) {
         const senha = document.querySelector("#senha").value;
         const confirmarSenha = document.querySelector("#confirmarSenha").value;
 
+        // Verifica se as senhas são iguais
         if (senha !== confirmarSenha) {
+
             const modalSenha = new bootstrap.Modal(
                 document.getElementById("modalSenhaDiferente")
             );
+
             modalSenha.show();
             return;
         }
 
-        const usuarioExiste = usuarios.find(function (u) {
-            return u.email.toUpperCase() === email.toUpperCase();
-        });
+        try {
 
-        if (usuarioExiste) {
-            const modalEmail = new bootstrap.Modal(
-                document.getElementById("modalEmailExiste")
+            const dados = await requisicaoAPI("/api/register", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    nome: nome,
+                    email: email,
+                    senha: senha,
+                    confirmacaoSenha: confirmarSenha
+                })
+            });
+
+            // Cadastro realizado com sucesso
+            const modal = new bootstrap.Modal(
+                document.getElementById("modalCadastro")
             );
-            modalEmail.show();
-            return;
+
+            modal.show();
+
+            formularioCadastro.reset();
+
+            setTimeout(function () {
+                window.location.href = "login.html";
+            }, 2000);
+
+        } catch (erro) {
+
+            console.error("Erro no cadastro:", erro);
+
+            if (erro.status === 409) {
+
+                const modalEmail = new bootstrap.Modal(
+                    document.getElementById("modalEmailExiste")
+                );
+
+                modalEmail.show();
+
+            } else {
+
+                alert(erro.message);
+
+            }
+
         }
-
-        usuarios.push({
-            nome: nome,
-            email: email,
-            senha: senha
-        });
-
-        localStorage.setItem("usuarios", JSON.stringify(usuarios));
-
-        const modal = new bootstrap.Modal(
-            document.getElementById("modalCadastro")
-        );
-
-        modal.show();
-
-        formularioCadastro.reset();
-
-        setTimeout(function () {
-            window.location.href = "../index.html";
-        }, 2000);
 
     });
 
@@ -288,8 +337,10 @@ async function listarProdutos() {
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
                             </p>
 
-                            <button class="btn btn-success btn-adicionar" data-id="${produto.id}">
-                                Adicionar ao carrinho
+                            <button class="btn btn-success btn-adicionar"
+                                data-id="${produto.id}"
+                                ${produto.stock === 0 ? "disabled" : ""}>
+                                ${produto.stock === 0 ? "Esgotado" : "Adicionar ao carrinho"}
                             </button>
 
                         </div>
@@ -385,8 +436,9 @@ async function buscarProdutos() {
                             </p>
 
                             <button class="btn btn-success btn-adicionar"
-                                data-id="${produto.id}">
-                                Adicionar ao carrinho
+                                data-id="${produto.id}"
+                                ${produto.stock === 0 ? "disabled" : ""}>
+                                ${produto.stock === 0 ? "Esgotado" : "Adicionar ao carrinho"}
                             </button>
 
                         </div>
