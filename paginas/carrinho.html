@@ -149,9 +149,38 @@
 
                 </div>
 
+
                 <p>
                     <strong>Frete:</strong>
                     <span id="valorFrete">R$ 0,00</span>
+                </p>
+
+                <div class="mb-3">
+
+                    <label for="codigoCupom" class="form-label">
+                        <strong>Cupom de desconto</strong>
+                    </label>
+
+                    <div class="input-group">
+
+                        <input type="text" id="codigoCupom" class="form-control" placeholder="Digite seu cupom">
+
+                        <button type="button" id="btnAplicarCupom" class="btn btn-outline-success">
+                            Aplicar cupom
+                        </button>
+                        <button type="button" id="btnRemoverCupom" class="btn btn-outline-danger">
+                            Remover
+                        </button>
+
+                    </div>
+
+                    <div id="mensagemCupom" class="mt-2"></div>
+
+                </div>
+
+                <p>
+                    <strong>Desconto:</strong>
+                    <span id="valorDesconto">R$ 0,00</span>
                 </p>
 
                 <hr>

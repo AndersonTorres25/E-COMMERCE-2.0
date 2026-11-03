@@ -20,24 +20,8 @@ async function requisicaoAPI(endpoint, opcoes = {}) {
 }
 
 
-// BANCO DADOS DE USUÁRIOS
-let usuarios = [
-    {
-        nome: "Administrador",
-        email: "admin@shop.com",
-        senha: "123456"
-    },
-    {
-        nome: "Anderson",
-        email: "anderson@email.com",
-        senha: "123"
-    },
-    {
-        nome: "ADM",
-        email: "a@mail",
-        senha: "123"
-    }
-];
+
+let usuarios = [];
 
 const usuariosSalvos = localStorage.getItem("usuarios");
 
@@ -78,10 +62,7 @@ if (formulario) {
             }
 
             // Salva os dados do usuário logado
-            localStorage.setItem(
-                "usuarioLogado",
-                JSON.stringify(dados.usuario)
-            );
+            localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
             // Mostra o modal de sucesso
             const modal = new bootstrap.Modal(
@@ -99,9 +80,7 @@ if (formulario) {
             console.error("Erro no login:", erro);
 
             if (erro.status === 401) {
-                const modalErro = new bootstrap.Modal(
-                    document.getElementById("modalErro")
-                );
+                const modalErro = new bootstrap.Modal(document.getElementById("modalErro"));
 
                 modalErro.show();
 
@@ -282,15 +261,9 @@ if (dadosUsuario) {
 
 }
 
-
-
-/**
- * Lista de produtos carregados da API.
- * Começa vazia e será preenchida pela requisição.
- */
 let produtos = [];
 
-// Listar os produtos
+//Lista de produtos carregados da API
 const listaProdutos = document.querySelector("#listaProdutos");
 
 async function listarProdutos() {
@@ -368,8 +341,6 @@ async function listarProdutos() {
 }
 
 listarProdutos();
-
-
 
 const formBusca = document.querySelector("#formBusca");
 const campoBusca = document.querySelector("#campoBusca");
@@ -483,7 +454,7 @@ if (formBusca && campoBusca && filtroCategoria) {
 
     });
 
-    // Debounce: espera 500 ms após a última tecla
+    // Debounce
     campoBusca.addEventListener("input", function () {
 
         clearTimeout(temporizadorBusca);
@@ -494,7 +465,7 @@ if (formBusca && campoBusca && filtroCategoria) {
 
     });
 
-    // Filtra imediatamente ao trocar a categoria
+    // Filtra a categoria
     filtroCategoria.addEventListener("change", function () {
 
         clearTimeout(temporizadorBusca);
@@ -504,8 +475,6 @@ if (formBusca && campoBusca && filtroCategoria) {
     });
 
 }
-
-
 
 
 //TOAST DO CARRINHO
@@ -671,11 +640,21 @@ function formatarMoeda(valor) {
 
 //Atualizar resumo do carrinho
 let freteSelecionado = 0;
+
+let cupomAplicado = null;
+
+const campoCupom = document.querySelector("#codigoCupom");
+const btnAplicarCupom = document.querySelector("#btnAplicarCupom");
+const mensagemCupom = document.querySelector("#mensagemCupom");
+const valorDesconto = document.querySelector("#valorDesconto");
+const btnRemoverCupom = document.querySelector("#btnRemoverCupom");
+
 const campoCEP = document.querySelector("#cep");
 const btnCalcularFrete = document.querySelector("#btnCalcularFrete");
 const opcoesFrete = document.querySelector("#opcoesFrete");
 const valorFrete = document.querySelector("#valorFrete");
 const btnRemoverFrete = document.querySelector("#btnRemoverFrete");
+
 function atualizarResumoCarrinho() {
 
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
@@ -684,40 +663,135 @@ function atualizarResumoCarrinho() {
     let subtotal = 0;
 
     carrinho.forEach(function (produto) {
-
         quantidadeTotal += produto.quantidade;
-
         subtotal += produto.preco * produto.quantidade;
-
     });
 
-    const quantidade = document.querySelector("#quantidadeCarrinho");
-    const subtotalElemento = document.querySelector("#subtotalCarrinho");
-    const total = document.querySelector("#totalCarrinho");
+    // Atualiza a quantidade
+    document.querySelector("#quantidadeCarrinho").textContent = quantidadeTotal;
 
-    if (quantidade) {
-        quantidade.textContent = quantidadeTotal;
+    let freteAtual = freteSelecionado;
+
+    if (cupomAplicado && cupomAplicado.tipo === "frete_gratis") {
+        freteAtual = 0;
     }
 
-    if (subtotalElemento) {
-        subtotalElemento.textContent = formatarMoeda(subtotal);
+    // Calcula o desconto
+    let desconto = 0;
+
+    if (cupomAplicado) {
+
+        if (cupomAplicado.tipo === "percentual") {
+            desconto = subtotal * (cupomAplicado.desconto / 100);
+
+        } else if (cupomAplicado.tipo === "fixo") {
+            desconto = cupomAplicado.desconto;
+        }
     }
+
+    desconto = Math.min(desconto, subtotal);
+
+    const valorTotal = Number((subtotal - desconto + freteAtual).toFixed(2));
+
+    document.querySelector("#subtotalCarrinho").textContent = formatarMoeda(subtotal);
 
     if (valorFrete) {
-        valorFrete.textContent = formatarMoeda(freteSelecionado);
+        valorFrete.textContent = formatarMoeda(freteAtual);
     }
 
-    if (total) {
-
-        const valorTotal = subtotal + freteSelecionado;
-
-        total.textContent = formatarMoeda(valorTotal);
-
+    if (valorDesconto) {
+        valorDesconto.textContent = formatarMoeda(desconto);
     }
 
+    document.querySelector("#totalCarrinho").textContent = formatarMoeda(valorTotal);
 }
 
 atualizarResumoCarrinho();
+
+// APLICAR CUPOM DE DESCONTO
+if (btnAplicarCupom) {
+
+    btnAplicarCupom.addEventListener("click", async function () {
+
+        const codigo = campoCupom.value.trim().toUpperCase();
+
+        if (!codigo) {
+            mensagemCupom.textContent = "Digite um código de cupom.";
+            mensagemCupom.className = "mt-2 text-danger";
+            return;
+        }
+
+        const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+        let subtotal = 0;
+
+        carrinho.forEach(function (produto) {
+            subtotal += produto.preco * produto.quantidade;
+        });
+
+        const corpo = {
+            codigo: codigo
+        };
+
+            if (codigo === "VIP50") {
+            corpo.subtotal = subtotal;
+        }
+
+        try {
+
+            const dados = await requisicaoAPI("/api/cupom", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(corpo)
+
+            });
+
+            cupomAplicado = dados.cupom;
+
+            atualizarResumoCarrinho();
+
+            mensagemCupom.textContent = dados.mensagem;
+            mensagemCupom.className = "mt-2 text-success";
+
+        } catch (erro) {
+
+            console.error("Erro ao aplicar cupom:", erro);
+
+            cupomAplicado = null;
+
+            atualizarResumoCarrinho();
+
+            mensagemCupom.textContent = erro.message;
+            mensagemCupom.className = "mt-2 text-danger";
+
+        }
+
+    });
+
+}
+
+// REMOVER CUPOM DE DESCONTO
+if (btnRemoverCupom) {
+
+    btnRemoverCupom.addEventListener("click", function () {
+
+        cupomAplicado = null;
+
+        campoCupom.value = "";
+
+        mensagemCupom.textContent = "Cupom removido com sucesso.";
+        mensagemCupom.className = "mt-2 text-success";
+
+        atualizarResumoCarrinho();
+
+    });
+
+}
 
 
 function ativarCamposQuantidade() {
