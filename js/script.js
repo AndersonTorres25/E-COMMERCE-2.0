@@ -793,7 +793,6 @@ if (btnRemoverCupom) {
 
 }
 
-
 function ativarCamposQuantidade() {
 
     const camposQuantidade = document.querySelectorAll(".input-quantidade");
@@ -865,19 +864,48 @@ botoesRemover.forEach(function (botao) {
 });
 
 
-//FINALIZAR PEDIDO
+ // FORMAS DE PAGAMENTO
+const opcoesPagamento = document.querySelectorAll(
+    'input[name="metodoPagamento"]'
+);
+
+const campoNumeroCartao = document.querySelector("#campoNumeroCartao");
+const numeroCartao = document.querySelector("#numeroCartao");
+
+opcoesPagamento.forEach(function (opcao) {
+
+    opcao.addEventListener("change", function () {
+
+        if (this.value === "cartao") {
+
+            campoNumeroCartao.style.display = "block";
+
+        } else {
+
+            campoNumeroCartao.style.display = "none";
+            numeroCartao.value = "";
+
+        }
+
+    });
+
+});
+
+
+
+// FINALIZAR PEDIDO (CHECKOUT)
 const btnFinalizar = document.querySelector("#btnFinalizar");
 
 if (btnFinalizar) {
 
-    btnFinalizar.addEventListener("click", function (e) {
+    btnFinalizar.addEventListener("click", async function (e) {
 
-        // Verifica se existe um usuário logado
+        e.preventDefault();
+
+        // Verifica se existe usuário logado
         const dadosUsuario = localStorage.getItem("usuarioLogado");
 
         if (!dadosUsuario) {
-
-            e.preventDefault();
 
             alert("Você precisa entrar na sua conta para finalizar o pedido.");
 
@@ -888,14 +916,12 @@ if (btnFinalizar) {
             }
 
             return;
-
         }
 
+        // Recupera os produtos do carrinho
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
         if (carrinho.length === 0) {
-
-            e.preventDefault();
 
             const modalCarrinhoVazio = new bootstrap.Modal(
                 document.getElementById("modalCarrinhoVazio")
@@ -904,10 +930,120 @@ if (btnFinalizar) {
             modalCarrinhoVazio.show();
 
             return;
-
         }
 
-        localStorage.setItem("pedidoFinalizado", JSON.stringify(carrinho));
+        // Verifica o CEP
+        const cepDigitado = campoCEP.value.trim();
+        const cepNumeros = cepDigitado.replace(/\D/g, "");
+
+        const cep = cepNumeros.length === 8
+            ? cepNumeros.replace(/^(\d{5})(\d{3})$/, "$1-$2")
+            : cepDigitado;
+
+        // Verifica a forma de pagamento
+        const pagamentoSelecionado = document.querySelector(
+            'input[name="metodoPagamento"]:checked'
+        );
+
+        if (!pagamentoSelecionado) {
+            alert("Selecione uma forma de pagamento.");
+            return;
+        }
+
+        const metodoPagamento = pagamentoSelecionado.value;
+
+        //  Prepara os dados do pedido
+        const corpo = {
+
+            itens: carrinho.map(function (produto) {
+                return {
+                    id: produto.id,
+                    quantidade: produto.quantidade
+                };
+            }),
+
+            cep: cep,
+
+            metodoPagamento: metodoPagamento
+
+        };
+
+        // Se for cartão, acrescenta o número
+        if (metodoPagamento === "cartao") {
+
+            const cartao = numeroCartao.value.trim();
+
+            if (!cartao) {
+                alert("Informe o número do cartão.");
+                return;
+            }
+
+            corpo.numeroCartao = cartao;
+        }
+
+        // Evita cliques repetidos durante a requisição
+        btnFinalizar.disabled = true;
+        btnFinalizar.textContent = "Processando pedido...";
+
+        try {
+
+            // 7. Envia o pedido para a API
+            const dados = await requisicaoAPI("/api/checkout", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(corpo)
+
+            });
+
+            // 8. Guarda o pedido retornado pela API
+            const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+
+            pedidos.push(dados.pedido);
+
+            localStorage.setItem("pedidos", JSON.stringify(pedidos));
+
+            // Limpa o carrinho somente após sucesso
+            localStorage.removeItem("carrinho");
+
+            // Redireciona para a página de sucesso
+            window.location.href = "sucesso-pedido.html";
+
+        } catch (erro) {
+
+            console.error("Erro ao finalizar pedido:", erro);
+
+            // Tratamento dos erros da API
+            if (erro.status === 400) {
+
+                alert("Dados inválidos: " + erro.message);
+
+            } else if (erro.status === 402) {
+
+                alert("Pagamento recusado. Verifique os dados do cartão ou utilize outro cartão.");
+
+            } else if (erro.status === 404) {
+
+                alert("Um produto do seu carrinho não foi encontrado. Atualize seu carrinho.");
+
+            } else if (erro.status === 422) {
+
+                alert("Estoque insuficiente: " + erro.message);
+
+            } else {
+
+                alert("Não foi possível finalizar o pedido: " + erro.message);
+
+            }
+
+            btnFinalizar.disabled = false;
+            btnFinalizar.textContent = "Finalizar Pedido";
+
+        }
 
     });
 

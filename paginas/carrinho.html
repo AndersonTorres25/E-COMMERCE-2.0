@@ -149,7 +149,6 @@
 
                 </div>
 
-
                 <p>
                     <strong>Frete:</strong>
                     <span id="valorFrete">R$ 0,00</span>
@@ -185,6 +184,7 @@
 
                 <hr>
 
+
                 <h3>
                     Total:
                     <span id="totalCarrinho" style="color: #1b501f">
@@ -192,9 +192,54 @@
                     </span>
                 </h3>
 
+                <div class="mb-3 mt-4">
+
+                    <strong>Forma de pagamento:</strong>
+
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" name="metodoPagamento" id="pagamentoPix"
+                            value="pix">
+
+                        <label class="form-check-label" for="pagamentoPix">
+                            Pix
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="metodoPagamento" id="pagamentoBoleto"
+                            value="boleto">
+
+                        <label class="form-check-label" for="pagamentoBoleto">
+                            Boleto
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="metodoPagamento" id="pagamentoCartao"
+                            value="cartao">
+
+                        <label class="form-check-label" for="pagamentoCartao">
+                            Cartão
+                        </label>
+                    </div>
+
+                </div>
+
+                <div class="mb-3" id="campoNumeroCartao" style="display: none;">
+
+                    <label for="numeroCartao" class="form-label">
+                        <strong>Número do cartão:</strong>
+                    </label>
+
+                    <input type="text" id="numeroCartao" class="form-control" placeholder="Digite o número do cartão"
+                        inputmode="numeric">
+
+                </div>
+
                 <a id="btnFinalizar" href="sucesso-pedido.html" class="btn btn-success w-100">
                     Finalizar Pedido
                 </a>
+
 
             </div>
 
