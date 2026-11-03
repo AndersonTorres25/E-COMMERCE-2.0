@@ -91,7 +91,7 @@ if (formulario) {
     });
 }
 
-// Atualizar o navbar 
+// Atualizar o navbar
 function atualizarNavbar() {
 
     const dados = localStorage.getItem("usuarioLogado");
@@ -100,19 +100,26 @@ function atualizarNavbar() {
 
     const usuario = JSON.parse(dados);
 
-    document.querySelector("#nomeUsuario").innerHTML = usuario.nome;
+    const nomeUsuario = document.querySelector("#nomeUsuario");
+    const menuLogin = document.querySelector("#menuLogin");
+    const menuCadastro = document.querySelector("#menuCadastro");
+    const menuPerfil = document.querySelector("#menuPerfil");
+    const menuPedidos = document.querySelector("#menuPedidos");
+    const menuSair = document.querySelector("#menuSair");
 
-    document.querySelector("#menuLogin").style.display = "none";
-    document.querySelector("#menuCadastro").style.display = "none";
+    if (!nomeUsuario) return;
 
-    document.querySelector("#menuPerfil").style.display = "block";
-    document.querySelector("#menuPedidos").style.display = "block";
-    document.querySelector("#menuSair").style.display = "block";
+    nomeUsuario.textContent = usuario.nome;
+
+    if (menuLogin) menuLogin.style.display = "none";
+    if (menuCadastro) menuCadastro.style.display = "none";
+    if (menuPerfil) menuPerfil.style.display = "block";
+    if (menuPedidos) menuPedidos.style.display = "block";
+    if (menuSair) menuSair.style.display = "block";
 
 }
 
 atualizarNavbar();
-
 
 //botão  sair da conta de usuário
 const btnSair = document.querySelector("#btnSair");
@@ -638,7 +645,7 @@ function formatarMoeda(valor) {
 }
 
 
-//Atualizar resumo do carrinho
+// Atualizar resumo do carrinho
 let freteSelecionado = 0;
 
 let cupomAplicado = null;
@@ -667,8 +674,13 @@ function atualizarResumoCarrinho() {
         subtotal += produto.preco * produto.quantidade;
     });
 
-    // Atualiza a quantidade
-    document.querySelector("#quantidadeCarrinho").textContent = quantidadeTotal;
+    const quantidadeElemento = document.querySelector("#quantidadeCarrinho");
+    const subtotalElemento = document.querySelector("#subtotalCarrinho");
+    const totalElemento = document.querySelector("#totalCarrinho");
+
+    if (quantidadeElemento) {
+        quantidadeElemento.textContent = quantidadeTotal;
+    }
 
     let freteAtual = freteSelecionado;
 
@@ -676,7 +688,6 @@ function atualizarResumoCarrinho() {
         freteAtual = 0;
     }
 
-    // Calcula o desconto
     let desconto = 0;
 
     if (cupomAplicado) {
@@ -693,7 +704,9 @@ function atualizarResumoCarrinho() {
 
     const valorTotal = Number((subtotal - desconto + freteAtual).toFixed(2));
 
-    document.querySelector("#subtotalCarrinho").textContent = formatarMoeda(subtotal);
+    if (subtotalElemento) {
+        subtotalElemento.textContent = formatarMoeda(subtotal);
+    }
 
     if (valorFrete) {
         valorFrete.textContent = formatarMoeda(freteAtual);
@@ -703,7 +716,9 @@ function atualizarResumoCarrinho() {
         valorDesconto.textContent = formatarMoeda(desconto);
     }
 
-    document.querySelector("#totalCarrinho").textContent = formatarMoeda(valorTotal);
+    if (totalElemento) {
+        totalElemento.textContent = formatarMoeda(valorTotal);
+    }
 }
 
 atualizarResumoCarrinho();
@@ -733,7 +748,7 @@ if (btnAplicarCupom) {
             codigo: codigo
         };
 
-            if (codigo === "VIP50") {
+        if (codigo === "VIP50") {
             corpo.subtotal = subtotal;
         }
 
@@ -864,7 +879,7 @@ botoesRemover.forEach(function (botao) {
 });
 
 
- // FORMAS DE PAGAMENTO
+// FORMAS DE PAGAMENTO
 const opcoesPagamento = document.querySelectorAll(
     'input[name="metodoPagamento"]'
 );
@@ -1126,23 +1141,23 @@ if (btnCalcularFrete) {
 
             });
 
-const radiosFrete = document.querySelectorAll('input[name="frete"]');
+            const radiosFrete = document.querySelectorAll('input[name="frete"]');
 
-radiosFrete.forEach(function (radio) {
+            radiosFrete.forEach(function (radio) {
 
-    radio.addEventListener("change", function () {
+                radio.addEventListener("change", function () {
 
-        const indice = Number(this.value);
+                    const indice = Number(this.value);
 
-        const freteEscolhido = dados.fretes[indice];
+                    const freteEscolhido = dados.fretes[indice];
 
-        freteSelecionado = Number(freteEscolhido.valor);
+                    freteSelecionado = Number(freteEscolhido.valor);
 
-        atualizarResumoCarrinho();
+                    atualizarResumoCarrinho();
 
-    });
+                });
 
-});    
+            });
 
         } catch (erro) {
 
@@ -1187,4 +1202,27 @@ if (btnRemoverFrete) {
 
     });
 
+}
+
+// EXIBIR DADOS DO PEDIDO FINALIZADO
+const numeroPedido = document.querySelector("#numero-pedido");
+
+if (numeroPedido) {
+    const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+    const pedido = pedidos[pedidos.length - 1];
+
+    if (pedido) {
+        document.querySelector("#numero-pedido").textContent = pedido.protocolo;
+        document.querySelector("#status-pedido").textContent = pedido.status;
+        document.querySelector("#cep-pedido").textContent = pedido.cep;
+        document.querySelector("#pagamento-pedido").textContent =
+            pedido.metodoPagamento.toUpperCase();
+        document.querySelector("#quantidade-pedido").textContent = pedido.totalItens;
+
+        document.querySelector("#valor-pedido").textContent =
+            "R$ " + pedido.valorProdutos.toFixed(2).replace(".", ",");
+    } else {
+        document.querySelector(".dados-pedido").textContent =
+            "Nenhum pedido encontrado.";
+    }
 }
