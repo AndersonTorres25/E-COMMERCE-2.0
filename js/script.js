@@ -1049,14 +1049,28 @@ if (btnFinalizar) {
                 (subtotal - desconto + frete).toFixed(2)
             );
 
-            // Guarda o pedido e os valores calculados
+           
+            // Guarda o pedido, os produtos e os valores calculados
             const pedidoSalvo = {
                 ...dados.pedido,
+
+                // Salva os produtos comprados
+                itens: carrinho.map(function (produto) {
+                    return {
+                        id: produto.id,
+                        nome: produto.nome,
+                        preco: produto.preco,
+                        imagem: produto.imagem,
+                        quantidade: produto.quantidade
+                    };
+                }),
+
                 subtotal: subtotal,
                 desconto: desconto,
                 frete: frete,
                 totalFinal: totalFinal
             };
+
 
             // Identifica o usuário que realizou a compra
             const usuario = JSON.parse(dadosUsuario);
@@ -1398,6 +1412,16 @@ if (listaPedidos) {
                             <strong>Valor total:</strong>
                             ${valorExibido}
                         </p>
+                        <div class="mt-3">
+
+                            <a href="pedido.html?id=${encodeURIComponent(pedido.protocolo)}"
+                                class="btn btn-outline-success">
+
+                                <i class="bi bi-eye"></i>
+                                Visualizar Detalhes
+                            </a>
+
+                        </div>
 
                     </div>
                 `;
@@ -1411,3 +1435,190 @@ if (listaPedidos) {
     }
 
 }
+
+
+// DETALHES DO PEDIDO
+const detalhesPedido = document.querySelector("#detalhesPedido");
+
+if (detalhesPedido) {
+
+    // Verifica se existe usuário conectado
+    if (!dadosUsuario) {
+
+        detalhesPedido.innerHTML = `
+            <div class="alert alert-warning">
+                Faça login para visualizar os detalhes do pedido.
+            </div>
+        `;
+
+    } else {
+
+        const usuario = JSON.parse(dadosUsuario);
+
+        // Recupera os pedidos da conta atual
+        const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+        const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+        // Recupera o protocolo enviado pela URL
+        const parametros = new URLSearchParams(window.location.search);
+
+        const protocolo = parametros.get("id");
+
+        // Localiza o pedido correspondente
+        const pedido = pedidos.find(function (p) {
+            return String(p.protocolo) === String(protocolo);
+        });
+
+        if (!pedido) {
+
+            detalhesPedido.innerHTML = `
+                <div class="alert alert-danger">
+                    Pedido não encontrado.
+                </div>
+            `;
+
+        } else {
+
+            // Verifica se o pedido possui produtos salvos
+            let listaItens = "";
+
+            if (pedido.itens && pedido.itens.length > 0) {
+
+                pedido.itens.forEach(function (produto) {
+
+                    const subtotalItem = produto.preco * produto.quantidade;
+
+                    listaItens += `
+                        <div class="d-flex align-items-center border-bottom py-3 gap-3">
+
+                            <img src="${produto.imagem}"
+                                alt="${produto.nome}"
+                                width="90"
+                                class="img-fluid rounded">
+
+                            <div class="flex-grow-1">
+
+                                <h6>${produto.nome}</h6>
+
+                                <p class="mb-1">
+                                    Preço unitário:
+                                    ${formatarMoeda(Number(produto.preco))}
+                                </p>
+
+                                <p class="mb-1">
+                                    Quantidade: ${produto.quantidade}
+                                </p>
+
+                                <strong>
+                                    Subtotal: ${formatarMoeda(subtotalItem)}
+                                </strong>
+
+                            </div>
+
+                        </div>
+                    `;
+
+                });
+
+            } else {
+
+                listaItens = `
+                    <div class="alert alert-info mt-3">
+                        Os detalhes dos produtos não estão disponíveis
+                        para este pedido.
+                    </div>
+                `;
+
+            }
+
+            // Exibe as informações do pedido
+            detalhesPedido.innerHTML = `
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-body">
+
+                        <h4 class="mb-3">Informações do pedido</h4>
+
+                        <p>
+                            <strong>Protocolo:</strong>
+                            ${pedido.protocolo}
+                        </p>
+
+                        <p>
+                            <strong>Status:</strong>
+                            ${pedido.status || "Não informado"}
+                        </p>
+
+                        <p>
+                            <strong>CEP:</strong>
+                            ${pedido.cep || "Não informado"}
+                        </p>
+
+                        <p>
+                            <strong>Forma de pagamento:</strong>
+                            ${(pedido.metodoPagamento || "Não informado").toUpperCase()}
+                        </p>
+
+                        <p>
+                            <strong>Quantidade de itens:</strong>
+                            ${pedido.totalItens ?? "Não informado"}
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-body">
+
+                        <h4 class="mb-3">Produtos comprados</h4>
+
+                        ${listaItens}
+
+                    </div>
+
+                </div>
+
+                <div class="card shadow-sm">
+
+                    <div class="card-body">
+
+                        <h4 class="mb-3">Resumo financeiro</h4>
+
+                        <p>
+                            <strong>Subtotal:</strong>
+                            ${formatarMoeda(Number(pedido.subtotal) || 0)}
+                        </p>
+
+                        <p>
+                            <strong>Desconto:</strong>
+                            ${formatarMoeda(Number(pedido.desconto) || 0)}
+                        </p>
+
+                        <p>
+                            <strong>Frete:</strong>
+                            ${formatarMoeda(Number(pedido.frete) || 0)}
+                        </p>
+
+                        <hr>
+
+                        <h4 class="text-success">
+                            Total:
+                            ${formatarMoeda(Number(pedido.totalFinal) || 0)}
+                        </h4>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+    }
+
+}
+
