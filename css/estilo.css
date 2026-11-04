@@ -318,11 +318,12 @@ input.botao-enviar:hover {
     text-align: center;
     padding: 40px 20px;
     box-sizing: border-box;
+    margin-top: 20px;
 }
 
 .icone-sucesso {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -348,23 +349,29 @@ input.botao-enviar:hover {
 .sucesso-pedido>p {
     margin: 8px 0;
     color: #555;
+        line-height: 0.9;
+
 }
 
 .dados-pedido {
     width: 100%;
     max-width: 450px;
     margin: 25px 0;
-    padding: 20px;
+    padding: 15px 20px;
     background-color: var(--cor-fundo);
     border: 1px solid #ddd;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
+    
 }
 
 .dados-pedido p {
     margin: 10px 0;
     font-size: 17px;
+    margin-bottom: 8px;
+    line-height: 0.4;
+
 }
 
 #numero-pedido {
@@ -374,9 +381,11 @@ input.botao-enviar:hover {
 
 .botoes-sucesso {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-bottom: 40px;
+
 }
 
 .btn-voltar,

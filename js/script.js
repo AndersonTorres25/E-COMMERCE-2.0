@@ -880,9 +880,7 @@ botoesRemover.forEach(function (botao) {
 
 
 // FORMAS DE PAGAMENTO
-const opcoesPagamento = document.querySelectorAll(
-    'input[name="metodoPagamento"]'
-);
+const opcoesPagamento = document.querySelectorAll('input[name="metodoPagamento"]');
 
 const campoNumeroCartao = document.querySelector("#campoNumeroCartao");
 const numeroCartao = document.querySelector("#numeroCartao");
@@ -908,7 +906,7 @@ opcoesPagamento.forEach(function (opcao) {
 
 
 
-// FINALIZAR PEDIDO (CHECKOUT)
+// FINALIZAR PEDIDO / CHECKOUT
 const btnFinalizar = document.querySelector("#btnFinalizar");
 
 if (btnFinalizar) {
@@ -938,9 +936,7 @@ if (btnFinalizar) {
 
         if (carrinho.length === 0) {
 
-            const modalCarrinhoVazio = new bootstrap.Modal(
-                document.getElementById("modalCarrinhoVazio")
-            );
+            const modalCarrinhoVazio = new bootstrap.Modal(document.getElementById("modalCarrinhoVazio"));
 
             modalCarrinhoVazio.show();
 
@@ -956,9 +952,7 @@ if (btnFinalizar) {
             : cepDigitado;
 
         // Verifica a forma de pagamento
-        const pagamentoSelecionado = document.querySelector(
-            'input[name="metodoPagamento"]:checked'
-        );
+        const pagamentoSelecionado = document.querySelector('input[name="metodoPagamento"]:checked');
 
         if (!pagamentoSelecionado) {
             alert("Selecione uma forma de pagamento.");
@@ -1002,7 +996,7 @@ if (btnFinalizar) {
 
         try {
 
-            // 7. Envia o pedido para a API
+            // Envia o pedido para a API
             const dados = await requisicaoAPI("/api/checkout", {
 
                 method: "POST",
@@ -1015,10 +1009,52 @@ if (btnFinalizar) {
 
             });
 
-            // 8. Guarda o pedido retornado pela API
+            // Guarda o pedido retornado pela API
+            let subtotal = 0;
+
+            carrinho.forEach(function (produto) {
+                subtotal += produto.preco * produto.quantidade;
+            });
+
+            // Calcula o desconto do cupom
+            let desconto = 0;
+
+            if (cupomAplicado) {
+
+                if (cupomAplicado.tipo === "percentual") {
+                    desconto = subtotal * (cupomAplicado.desconto / 100);
+
+                } else if (cupomAplicado.tipo === "fixo") {
+                    desconto = cupomAplicado.desconto;
+                }
+            }
+
+            desconto = Math.min(desconto, subtotal);
+
+            // Calcula o frete
+            let frete = freteSelecionado;
+
+            if (cupomAplicado && cupomAplicado.tipo === "frete_gratis") {
+                frete = 0;
+            }
+
+            // Calcula o total
+            const totalFinal = Number(
+                (subtotal - desconto + frete).toFixed(2)
+            );
+
+            // Guarda o pedido e os valores calculados
+            const pedidoSalvo = {
+                ...dados.pedido,
+                subtotal: subtotal,
+                desconto: desconto,
+                frete: frete,
+                totalFinal: totalFinal
+            };
+
             const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
 
-            pedidos.push(dados.pedido);
+            pedidos.push(pedidoSalvo);
 
             localStorage.setItem("pedidos", JSON.stringify(pedidos));
 
@@ -1208,21 +1244,36 @@ if (btnRemoverFrete) {
 const numeroPedido = document.querySelector("#numero-pedido");
 
 if (numeroPedido) {
+
     const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+
     const pedido = pedidos[pedidos.length - 1];
 
     if (pedido) {
+
+        // Exibe os dados gerais do pedido
         document.querySelector("#numero-pedido").textContent = pedido.protocolo;
+
         document.querySelector("#status-pedido").textContent = pedido.status;
+
         document.querySelector("#cep-pedido").textContent = pedido.cep;
-        document.querySelector("#pagamento-pedido").textContent =
-            pedido.metodoPagamento.toUpperCase();
+
+        document.querySelector("#pagamento-pedido").textContent = pedido.metodoPagamento.toUpperCase();
+
         document.querySelector("#quantidade-pedido").textContent = pedido.totalItens;
 
-        document.querySelector("#valor-pedido").textContent =
-            "R$ " + pedido.valorProdutos.toFixed(2).replace(".", ",");
+        // Exibe os valores financeiros
+        document.querySelector("#subtotal-pedido").textContent = formatarMoeda(pedido.subtotal);
+
+        document.querySelector("#desconto-pedido").textContent = formatarMoeda(pedido.desconto);
+
+        document.querySelector("#frete-pedido").textContent = formatarMoeda(pedido.frete);
+
+        document.querySelector("#total-pedido").textContent = formatarMoeda(pedido.totalFinal);
+
     } else {
-        document.querySelector(".dados-pedido").textContent =
-            "Nenhum pedido encontrado.";
+
+        document.querySelector(".dados-pedido").textContent = "Nenhum pedido encontrado.";
+
     }
 }
