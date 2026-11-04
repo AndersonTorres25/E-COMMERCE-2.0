@@ -19,8 +19,6 @@ async function requisicaoAPI(endpoint, opcoes = {}) {
     return dados;
 }
 
-
-
 let usuarios = [];
 
 const usuariosSalvos = localStorage.getItem("usuarios");
@@ -91,7 +89,7 @@ if (formulario) {
     });
 }
 
-// Atualizar o navbar
+// Atualiza o navbar
 function atualizarNavbar() {
 
     const dados = localStorage.getItem("usuarioLogado");
@@ -951,6 +949,14 @@ if (btnFinalizar) {
             ? cepNumeros.replace(/^(\d{5})(\d{3})$/, "$1-$2")
             : cepDigitado;
 
+            // Verifica se o cliente selecionou uma opção de frete
+            const freteMarcado = document.querySelector('input[name="frete"]:checked');
+
+            if (!freteMarcado) {
+                alert("Selecione uma opção de frete antes de finalizar o pedido.");
+                return;
+            }
+
         // Verifica a forma de pagamento
         const pagamentoSelecionado = document.querySelector('input[name="metodoPagamento"]:checked');
 
@@ -1052,11 +1058,20 @@ if (btnFinalizar) {
                 totalFinal: totalFinal
             };
 
-            const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+            // Identifica o usuário que realizou a compra
+            const usuario = JSON.parse(dadosUsuario);
 
+            // Cria uma chave exclusiva para os pedidos desse usuário
+            const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+            // Recupera os pedidos anteriores dessa conta
+            const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+            // Adiciona o novo pedido
             pedidos.push(pedidoSalvo);
 
-            localStorage.setItem("pedidos", JSON.stringify(pedidos));
+            // Salva os pedidos na conta correspondente
+            localStorage.setItem(chavePedidos, JSON.stringify(pedidos));
 
             // Limpa o carrinho somente após sucesso
             localStorage.removeItem("carrinho");
@@ -1240,40 +1255,159 @@ if (btnRemoverFrete) {
 
 }
 
+
 // EXIBIR DADOS DO PEDIDO FINALIZADO
 const numeroPedido = document.querySelector("#numero-pedido");
 
 if (numeroPedido) {
 
-    const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+    // Recupera os dados do usuário conectado
+    const dadosUsuario = localStorage.getItem("usuarioLogado");
 
-    const pedido = pedidos[pedidos.length - 1];
+    if (!dadosUsuario) {
 
-    if (pedido) {
-
-        // Exibe os dados gerais do pedido
-        document.querySelector("#numero-pedido").textContent = pedido.protocolo;
-
-        document.querySelector("#status-pedido").textContent = pedido.status;
-
-        document.querySelector("#cep-pedido").textContent = pedido.cep;
-
-        document.querySelector("#pagamento-pedido").textContent = pedido.metodoPagamento.toUpperCase();
-
-        document.querySelector("#quantidade-pedido").textContent = pedido.totalItens;
-
-        // Exibe os valores financeiros
-        document.querySelector("#subtotal-pedido").textContent = formatarMoeda(pedido.subtotal);
-
-        document.querySelector("#desconto-pedido").textContent = formatarMoeda(pedido.desconto);
-
-        document.querySelector("#frete-pedido").textContent = formatarMoeda(pedido.frete);
-
-        document.querySelector("#total-pedido").textContent = formatarMoeda(pedido.totalFinal);
+        document.querySelector(".dados-pedido").textContent =
+            "Não foi possível identificar o usuário.";
 
     } else {
 
-        document.querySelector(".dados-pedido").textContent = "Nenhum pedido encontrado.";
+        const usuario = JSON.parse(dadosUsuario);
+
+        // Identifica a chave de pedidos desse usuário
+        const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+        const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+        // Recupera o pedido mais recente
+        const pedido = pedidos[pedidos.length - 1];
+
+        if (pedido) {
+
+            document.querySelector("#numero-pedido").textContent = pedido.protocolo || "Não informado";
+
+            document.querySelector("#status-pedido").textContent = pedido.status || "Não informado";
+
+            document.querySelector("#cep-pedido").textContent = pedido.cep || "Não informado";
+
+            document.querySelector("#pagamento-pedido").textContent = (pedido.metodoPagamento || "Não informado").toUpperCase();
+
+            document.querySelector("#quantidade-pedido").textContent = pedido.totalItens ?? "Não informado";
+
+            document.querySelector("#subtotal-pedido").textContent = formatarMoeda(Number(pedido.subtotal) || 0);
+
+            document.querySelector("#desconto-pedido").textContent = formatarMoeda(Number(pedido.desconto) || 0);
+
+            document.querySelector("#frete-pedido").textContent = formatarMoeda(Number(pedido.frete) || 0);
+
+            document.querySelector("#total-pedido").textContent = formatarMoeda(Number(pedido.totalFinal) || 0);
+
+        } else {
+
+            document.querySelector(".dados-pedido").textContent = "Nenhum pedido encontrado.";
+
+        }
 
     }
+
+}
+
+// MEUS PEDIDOS
+const listaPedidos = document.querySelector("#listaPedidos");
+const mensagemSemPedidos = document.querySelector("#mensagemSemPedidos");
+
+if (listaPedidos) {
+
+    // Verifica se existe um usuário conectado
+    if (!dadosUsuario) {
+
+        listaPedidos.innerHTML = `
+            <div class="text-center">
+                <p>Faça login para consultar seus pedidos.</p>
+            </div>
+        `;
+
+    } else {
+
+        // Identifica o usuário conectado
+        const usuario = JSON.parse(dadosUsuario);
+
+        // Recupera somente os pedidos desse usuário
+        const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+        const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+        // Verifica se existem pedidos
+        if (pedidos.length === 0) {
+
+            mensagemSemPedidos.style.display = "block";
+
+        } else {
+
+            // Percorre os pedidos do usuário
+            pedidos.forEach(function (pedido) {
+
+                const possuiValores = pedido.totalFinal !== undefined || pedido.subtotal !== undefined;
+
+                const subtotal = Number(pedido.subtotal) || 0;
+                const desconto = Number(pedido.desconto) || 0;
+                const frete = Number(pedido.frete) || 0;
+
+                const totalPedido = pedido.totalFinal !== undefined
+                    ? Number(pedido.totalFinal)
+                    : subtotal - desconto + frete;
+
+                const valorExibido = possuiValores && Number.isFinite(totalPedido)
+                    ? formatarMoeda(totalPedido)
+                    : "Não informado";
+
+                // Cria o card do pedido
+                const card = document.createElement("div");
+
+                card.className = "card shadow-sm mb-4";
+
+                card.innerHTML = `
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+
+                            <h5 class="card-title mb-2">
+                                Pedido: ${pedido.protocolo || "Não informado"}
+                            </h5>
+
+                            <span class="badge bg-success">
+                                ${pedido.status || "Não informado"}
+                            </span>
+
+                        </div>
+
+                        <p class="mb-2">
+                            <strong>CEP:</strong> ${pedido.cep || "Não informado"}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Pagamento:</strong>
+                            ${(pedido.metodoPagamento || "Não informado").toUpperCase()}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Quantidade de itens:</strong>
+                            ${pedido.totalItens ?? "Não informado"}
+                        </p>
+
+                        <p class="mb-3">
+                            <strong>Valor total:</strong>
+                            ${valorExibido}
+                        </p>
+
+                    </div>
+                `;
+
+                listaPedidos.appendChild(card);
+
+            });
+
+        }
+
+    }
+
 }

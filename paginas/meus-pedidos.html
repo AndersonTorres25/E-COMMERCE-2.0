@@ -32,7 +32,7 @@
                     <li class="nav-item dropdown dropdown-usuario">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <img src="../imagens/login/login.png" width="30">
+                            <img src="../imagens/login/login.png" width="30" alt="Usuário">
 
                             <span id="nomeUsuario">Entrar / Cadastrar</span>
                         </a>
@@ -85,20 +85,28 @@
     </nav>
 
     <main class="container py-5">
-        <div class="card text-center shadow-sm mx-auto" style="max-width: 600px;">
-            <div class="card-body p-5">
-                <h1 class="card-title h3 mb-3">
-                    Página em manutenção
-                </h1>
+        <h1 class="text-center mb-4">Meus Pedidos</h1>
 
-                <p class="card-text text-secondary mb-4">
-                    Estamos trabalhando para disponibilizar esta funcionalidade em breve.
-                </p>
+        <p class="text-center text-secondary mb-5">
+            Acompanhe seus pedidos e consulte os detalhes das suas compras.
+        </p>
 
-                <a href="../index.html" class="btn btn-success">
-                    Voltar para a página inicial
-                </a>
-            </div>
+        <div id="listaPedidos">
+
+        </div>
+
+        <div id="mensagemSemPedidos" class="text-center py-5" style="display: none;">
+
+            <h4>Você ainda não possui pedidos.</h4>
+
+            <p class="text-secondary">
+                Quando realizar uma compra, seus pedidos aparecerão nesta página.
+            </p>
+
+            <a href="../paginas/produtos.html" class="btn btn-success">
+                Ver produtos
+            </a>
+
         </div>
     </main>
 
