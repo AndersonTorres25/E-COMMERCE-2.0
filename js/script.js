@@ -1388,7 +1388,7 @@ if (listaPedidos) {
                                 Pedido: ${pedido.protocolo || "Não informado"}
                             </h5>
 
-                            <span class="badge bg-success">
+                            <span class="badge ${String(pedido.status).toLowerCase() === "cancelado" ? "bg-secondary" : "bg-success"}">
                                 ${pedido.status || "Não informado"}
                             </span>
 
@@ -1412,7 +1412,7 @@ if (listaPedidos) {
                             <strong>Valor total:</strong>
                             ${valorExibido}
                         </p>
-                        <div class="mt-3">
+                        <div class="mt-3 d-flex gap-2 flex-wrap">
 
                             <a href="pedido.html?id=${encodeURIComponent(pedido.protocolo)}"
                                 class="btn btn-outline-success">
@@ -1420,9 +1420,15 @@ if (listaPedidos) {
                                 <i class="bi bi-eye"></i>
                                 Visualizar Detalhes
                             </a>
+                           <button type="button"
+                                class="btn ${String(pedido.status).toLowerCase() === "cancelado" ? "btn-secondary" : "btn-outline-danger"} btn-cancelar-pedido" data-protocolo="${pedido.protocolo}" ${String(pedido.status).toLowerCase() === "cancelado" ? "disabled" : ""}>
 
+                                <i class="bi ${String(pedido.status).toLowerCase() === "cancelado" ? "bi-check-circle-fill" : "bi-x-circle"}"></i>
+
+                                ${String(pedido.status).toLowerCase() === "cancelado" ? "Pedido Cancelado" : "Cancelar Pedido"}
+
+                            </button>
                         </div>
-
                     </div>
                 `;
 
@@ -1433,6 +1439,122 @@ if (listaPedidos) {
         }
 
     }
+
+}
+
+
+ // CANCELAR PEDIDO
+if (listaPedidos) {
+
+    listaPedidos.addEventListener("click", async function (e) {
+
+        // Verifica se o clique foi no botão de cancelar
+        const botao = e.target.closest(".btn-cancelar-pedido");
+
+        if (!botao) return;
+
+        // Recupera o protocolo do pedido
+        const protocolo = botao.dataset.protocolo;
+
+        // Confirmação antes de cancelar
+        const confirmar = confirm(
+            "Tem certeza de que deseja cancelar este pedido?"
+        );
+
+        if (!confirmar) return;
+
+        botao.disabled = true;
+        botao.textContent = "Cancelando...";
+
+        try {
+
+            // Envia a solicitação de cancelamento para a API
+            await requisicaoAPI(
+                "/api/pedido?protocolo=" + encodeURIComponent(protocolo),
+                {
+                    method: "DELETE"
+                }
+            );
+
+            // Recupera o usuário conectado
+            const usuario = JSON.parse(dadosUsuario);
+
+            // Identifica os pedidos dessa conta
+            const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+            const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+            // Localiza o pedido cancelado
+            const pedido = pedidos.find(function (p) {
+                return String(p.protocolo) === String(protocolo);
+            });
+
+            
+            // Atualiza o status no armazenamento local
+            if (pedido) {
+                pedido.status = "cancelado";
+            }
+
+            localStorage.setItem(
+                chavePedidos,
+                JSON.stringify(pedidos)
+            );
+
+           // Atualiza visualmente o botão
+            botao.disabled = true;
+            botao.className = "btn btn-secondary";
+            botao.innerHTML = `
+                <i class="bi bi-check-circle-fill"></i>
+                Pedido Cancelado
+            `;
+
+            // Atualiza a etiqueta de status do pedido
+            const cardPedido = botao.closest(".card");
+
+            if (cardPedido) {
+
+                const etiquetaStatus = cardPedido.querySelector(".badge");
+
+                if (etiquetaStatus) {
+                    etiquetaStatus.textContent = "cancelado";
+                    etiquetaStatus.className = "badge bg-secondary";
+                }
+
+            }
+
+            alert("Pedido cancelado com sucesso!");
+
+        } catch (erro) {
+
+            console.error("Erro ao cancelar pedido:", erro);
+
+            if (erro.status === 400) {
+
+                alert("Protocolo do pedido não informado.");
+
+            } else if (erro.status === 404) {
+
+                alert("Pedido não encontrado.");
+
+            } else if (erro.status === 422) {
+
+                alert("Este pedido não pode ser cancelado porque já foi enviado.");
+
+            } else {
+
+                alert("Não foi possível cancelar o pedido: " + erro.message);
+
+            }
+
+            botao.disabled = false;
+            botao.innerHTML = `
+                <i class="bi bi-x-circle"></i>
+                Cancelar Pedido
+            `;
+
+        }
+
+    });
 
 }
 
