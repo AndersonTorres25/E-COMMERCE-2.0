@@ -19,6 +19,189 @@ async function requisicaoAPI(endpoint, opcoes = {}) {
     return dados;
 }
 
+
+// Cria o modal de notificações automaticamente
+const elementoNotificacao = document.createElement("div");
+
+elementoNotificacao.id = "modalNotificacao";
+elementoNotificacao.className = "modal fade";
+elementoNotificacao.tabIndex = -1;
+elementoNotificacao.setAttribute("aria-hidden", "true");
+elementoNotificacao.hidden = true;
+
+elementoNotificacao.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloNotificacao">
+                    Notificação
+                </h5>
+
+                <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Fechar">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p id="mensagemNotificacao" class="mb-0"></p>
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                    id="btnCancelarNotificacao"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                    hidden>
+                    Não
+                </button>
+
+                <button type="button"
+                    id="btnConfirmarNotificacao"
+                    class="btn btn-success"
+                    hidden>
+                    Sim, confirmar
+                </button>
+
+                <button type="button"
+                    id="btnFecharNotificacao"
+                    class="btn btn-success"
+                    data-bs-dismiss="modal">
+                    Entendi
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+`;
+
+document.body.appendChild(elementoNotificacao);
+
+// Inicializa o modal Bootstrap
+let modalNotificacao = null;
+
+if (typeof bootstrap !== "undefined") {
+    modalNotificacao = new bootstrap.Modal(elementoNotificacao);
+}
+
+const tituloNotificacao =
+    document.querySelector("#tituloNotificacao");
+
+const mensagemNotificacao =
+    document.querySelector("#mensagemNotificacao");
+
+const btnCancelarNotificacao =
+    document.querySelector("#btnCancelarNotificacao");
+
+const btnConfirmarNotificacao =
+    document.querySelector("#btnConfirmarNotificacao");
+
+const btnFecharNotificacao =
+    document.querySelector("#btnFecharNotificacao");
+
+// Controla o resultado das confirmações
+let resolverNotificacao = null;
+let resultadoNotificacao = false;
+
+// Exibe uma notificação simples
+function mostrarNotificacao(mensagem, tipo = "info") {
+
+    const configuracoes = {
+        sucesso: {
+            titulo: "Sucesso!",
+            botao: "btn-success"
+        },
+        erro: {
+            titulo: "Atenção!",
+            botao: "btn-danger"
+        },
+        info: {
+            titulo: "Informação",
+            botao: "btn-primary"
+        },
+        aviso: {
+            titulo: "Aviso",
+            botao: "btn-warning"
+        }
+    };
+
+    const configuracao = configuracoes[tipo] || configuracoes.info;
+
+    tituloNotificacao.textContent = configuracao.titulo;
+    mensagemNotificacao.textContent = mensagem;
+
+    btnFecharNotificacao.className = "btn " + configuracao.botao;
+
+    btnFecharNotificacao.hidden = false;
+    btnCancelarNotificacao.hidden = true;
+    btnConfirmarNotificacao.hidden = true;
+
+    elementoNotificacao.hidden = false;
+
+    modalNotificacao.show();
+}
+
+// Exibe uma confirmação com Sim e Não
+function confirmarAcao(mensagem) {
+
+    return new Promise(function (resolve) {
+
+        resolverNotificacao = resolve;
+        resultadoNotificacao = false;
+
+        tituloNotificacao.textContent = "Confirmar ação";
+        mensagemNotificacao.textContent = mensagem;
+
+        btnFecharNotificacao.hidden = true;
+        btnCancelarNotificacao.hidden = false;
+        btnConfirmarNotificacao.hidden = false;
+
+        elementoNotificacao.hidden = false;
+
+        modalNotificacao.show();
+
+    });
+
+}
+
+// Botão Sim
+btnConfirmarNotificacao.addEventListener("click", function () {
+
+    resultadoNotificacao = true;
+    modalNotificacao.hide();
+
+});
+
+// Botão Não
+btnCancelarNotificacao.addEventListener("click", function () {
+
+    resultadoNotificacao = false;
+    modalNotificacao.hide();
+
+});
+
+// Finaliza a confirmação quando o modal fecha
+elementoNotificacao.addEventListener(
+    "hidden.bs.modal",
+    function () {
+
+        elementoNotificacao.hidden = true;
+
+        if (resolverNotificacao) {
+
+            resolverNotificacao(resultadoNotificacao);
+            resolverNotificacao = null;
+
+        }
+
+    }
+);
+
+
 let usuarios = [];
 
 const usuariosSalvos = localStorage.getItem("usuarios");
@@ -83,7 +266,7 @@ if (formulario) {
                 modalErro.show();
 
             } else {
-                alert(erro.message);
+                mostrarNotificacao(erro.message, "erro");
             }
         }
     });
@@ -230,9 +413,7 @@ if (formularioCadastro) {
                 modalEmail.show();
 
             } else {
-
-                alert(erro.message);
-
+                mostrarNotificacao(erro.message, "erro");
             }
 
         }
@@ -918,13 +1099,19 @@ if (btnFinalizar) {
 
         if (!dadosUsuario) {
 
-            alert("Você precisa entrar na sua conta para finalizar o pedido.");
+            mostrarNotificacao("Você precisa entrar na sua conta para finalizar o pedido.", "aviso");
 
-            const linkLogin = document.querySelector("#menuLogin a");
+            elementoNotificacao.addEventListener("hidden.bs.modal", function redirecionar() {
 
-            if (linkLogin) {
-                window.location.href = linkLogin.href;
-            }
+                elementoNotificacao.removeEventListener("hidden.bs.modal", redirecionar);
+
+                const linkLogin = document.querySelector("#menuLogin a");
+
+                if (linkLogin) {
+                    window.location.href = linkLogin.href;
+                }
+
+            });
 
             return;
         }
@@ -953,7 +1140,7 @@ if (btnFinalizar) {
             const freteMarcado = document.querySelector('input[name="frete"]:checked');
 
             if (!freteMarcado) {
-                alert("Selecione uma opção de frete antes de finalizar o pedido.");
+                 mostrarNotificacao("Selecione uma opção de frete antes de finalizar o pedido.", "aviso");
                 return;
             }
 
@@ -961,7 +1148,7 @@ if (btnFinalizar) {
         const pagamentoSelecionado = document.querySelector('input[name="metodoPagamento"]:checked');
 
         if (!pagamentoSelecionado) {
-            alert("Selecione uma forma de pagamento.");
+            mostrarNotificacao("Selecione uma forma de pagamento.", "aviso");
             return;
         }
 
@@ -989,7 +1176,7 @@ if (btnFinalizar) {
             const cartao = numeroCartao.value.trim();
 
             if (!cartao) {
-                alert("Informe o número do cartão.");
+                 mostrarNotificacao("Informe o número do cartão.", "aviso");
                 return;
             }
 
@@ -1100,23 +1287,23 @@ if (btnFinalizar) {
             // Tratamento dos erros da API
             if (erro.status === 400) {
 
-                alert("Dados inválidos: " + erro.message);
+                mostrarNotificacao("Dados inválidos: " + erro.message,"aviso");
 
             } else if (erro.status === 402) {
 
-                alert("Pagamento recusado. Verifique os dados do cartão ou utilize outro cartão.");
+                mostrarNotificacao("Pagamento recusado. Verifique os dados do cartão ou utilize outro cartão.", "erro");
 
             } else if (erro.status === 404) {
 
-                alert("Um produto do seu carrinho não foi encontrado. Atualize seu carrinho.");
+                mostrarNotificacao("Um produto do seu carrinho não foi encontrado. Atualize seu carrinho.", "aviso");
 
             } else if (erro.status === 422) {
 
-                alert("Estoque insuficiente: " + erro.message);
+                mostrarNotificacao("Estoque insuficiente: " + erro.message, "aviso");
 
             } else {
 
-                alert("Não foi possível finalizar o pedido: " + erro.message);
+                mostrarNotificacao("Não foi possível finalizar o pedido: " + erro.message, "erro");
 
             }
 
@@ -1146,7 +1333,7 @@ if (btnCalcularFrete) {
 
         if (cep.length !== 8) {
 
-            alert("Informe um CEP válido com 8 números.");
+            mostrarNotificacao("Informe um CEP válido com 8 números.","aviso");
 
             return;
         }
@@ -1230,19 +1417,19 @@ if (btnCalcularFrete) {
 
             if (erro.status === 400) {
 
-                alert("Formato de CEP inválido.");
+                 mostrarNotificacao("Formato de CEP inválido.","aviso");
 
             } else if (erro.status === 404) {
 
-                alert("CEP não encontrado.");
+                mostrarNotificacao("CEP não encontrado.","aviso");
 
             } else if (erro.status === 422) {
 
-                alert("Região não atendida para entrega.");
+                mostrarNotificacao("Região não atendida para entrega.","aviso");
 
             } else {
 
-                alert(erro.message);
+                mostrarNotificacao(erro.message,"erro");
 
             }
 
