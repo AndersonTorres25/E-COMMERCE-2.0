@@ -88,20 +88,15 @@ if (typeof bootstrap !== "undefined") {
     modalNotificacao = new bootstrap.Modal(elementoNotificacao);
 }
 
-const tituloNotificacao =
-    document.querySelector("#tituloNotificacao");
+const tituloNotificacao = document.querySelector("#tituloNotificacao");
 
-const mensagemNotificacao =
-    document.querySelector("#mensagemNotificacao");
+const mensagemNotificacao = document.querySelector("#mensagemNotificacao");
 
-const btnCancelarNotificacao =
-    document.querySelector("#btnCancelarNotificacao");
+const btnCancelarNotificacao = document.querySelector("#btnCancelarNotificacao");
 
-const btnConfirmarNotificacao =
-    document.querySelector("#btnConfirmarNotificacao");
+const btnConfirmarNotificacao = document.querySelector("#btnConfirmarNotificacao");
 
-const btnFecharNotificacao =
-    document.querySelector("#btnFecharNotificacao");
+const btnFecharNotificacao = document.querySelector("#btnFecharNotificacao");
 
 // Controla o resultado das confirmações
 let resolverNotificacao = null;
@@ -1644,9 +1639,7 @@ if (listaPedidos) {
         const protocolo = botao.dataset.protocolo;
 
         // Confirmação antes de cancelar
-        const confirmar = confirm(
-            "Tem certeza de que deseja cancelar este pedido?"
-        );
+        const confirmar = await confirmarAcao("Tem certeza de que deseja cancelar este pedido?");
 
         if (!confirmar) return;
 
@@ -1709,7 +1702,7 @@ if (listaPedidos) {
 
             }
 
-            alert("Pedido cancelado com sucesso!");
+            mostrarNotificacao("Pedido cancelado com sucesso!", "sucesso");
 
         } catch (erro) {
 
@@ -1717,20 +1710,19 @@ if (listaPedidos) {
 
             if (erro.status === 400) {
 
-                alert("Protocolo do pedido não informado.");
+                mostrarNotificacao("Protocolo do pedido não informado.", "aviso");
 
             } else if (erro.status === 404) {
 
-                alert("Pedido não encontrado.");
+                mostrarNotificacao("Pedido não encontrado.", "aviso");
 
             } else if (erro.status === 422) {
 
-                alert("Este pedido não pode ser cancelado porque já foi enviado.");
+                mostrarNotificacao("Este pedido não pode ser cancelado porque já foi enviado.", "aviso");
 
             } else {
 
-                alert("Não foi possível cancelar o pedido: " + erro.message);
-
+                mostrarNotificacao("Não foi possível cancelar o pedido: " + erro.message, "erro");
             }
 
             botao.disabled = false;
