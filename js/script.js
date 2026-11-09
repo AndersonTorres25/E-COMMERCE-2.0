@@ -196,15 +196,6 @@ elementoNotificacao.addEventListener(
     }
 );
 
-
-let usuarios = [];
-
-const usuariosSalvos = localStorage.getItem("usuarios");
-
-if (usuariosSalvos) {
-    usuarios = JSON.parse(usuariosSalvos);
-}
-
 // LOGIN do usuário
 const formulario = document.querySelector("#form-login");
 
@@ -241,28 +232,16 @@ if (formulario) {
             localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
             // Mostra o modal de sucesso
-            const modal = new bootstrap.Modal(
-                document.getElementById("modalSucesso")
-            );
+            const modal = new bootstrap.Modal( document.getElementById("modalSucesso") );
 
             modal.show();
 
             // Redireciona para a página inicial
-            setTimeout(function () {
-                window.location.href = "../index.html";
-            }, 3000);
+            setTimeout(function () { window.location.href = "../index.html";}, 3000);
 
         } catch (erro) {
             console.error("Erro no login:", erro);
-
-            if (erro.status === 401) {
-                const modalErro = new bootstrap.Modal(document.getElementById("modalErro"));
-
-                modalErro.show();
-
-            } else {
-                mostrarNotificacao(erro.message, "erro");
-            }
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message,"erro" );
         }
     });
 }
@@ -354,17 +333,6 @@ if (formularioCadastro) {
         const senha = document.querySelector("#senha").value;
         const confirmarSenha = document.querySelector("#confirmarSenha").value;
 
-        // Verifica se as senhas são iguais
-        if (senha !== confirmarSenha) {
-
-            const modalSenha = new bootstrap.Modal(
-                document.getElementById("modalSenhaDiferente")
-            );
-
-            modalSenha.show();
-            return;
-        }
-
         try {
 
             const dados = await requisicaoAPI("/api/register", {
@@ -396,21 +364,8 @@ if (formularioCadastro) {
             }, 2000);
 
         } catch (erro) {
-
             console.error("Erro no cadastro:", erro);
-
-            if (erro.status === 409) {
-
-                const modalEmail = new bootstrap.Modal(
-                    document.getElementById("modalEmailExiste")
-                );
-
-                modalEmail.show();
-
-            } else {
-                mostrarNotificacao(erro.message, "erro");
-            }
-
+              mostrarNotificacao("Erro " + erro.status + " - " + erro.message,"erro");
         }
 
     });
@@ -822,6 +777,12 @@ function formatarMoeda(valor) {
 // Atualizar resumo do carrinho
 let freteSelecionado = 0;
 
+// Guarda o CEP para o qual o frete foi calculado e selecionado
+let cepAplicado = null;
+
+// Controla as requisições de frete para evitar respostas fora de ordem
+let requisicaoFrete = 0;
+
 let cupomAplicado = null;
 
 const campoCupom = document.querySelector("#codigoCupom");
@@ -835,6 +796,46 @@ const btnCalcularFrete = document.querySelector("#btnCalcularFrete");
 const opcoesFrete = document.querySelector("#opcoesFrete");
 const valorFrete = document.querySelector("#valorFrete");
 const btnRemoverFrete = document.querySelector("#btnRemoverFrete");
+
+// Controla a exibição do botão Remover Frete
+function atualizarBotaoRemoverFrete() {
+
+    if (btnRemoverFrete) {
+        btnRemoverFrete.hidden = cepAplicado === null;
+    }
+
+}
+
+// Esconde o botão assim que a página é carregada
+atualizarBotaoRemoverFrete();
+
+// Invalida o frete quando o cliente altera o CEP
+if (campoCEP) {
+
+    campoCEP.addEventListener("input", function () {
+
+        const cepAtual = this.value.replace(/\D/g, "");
+
+        // Se o CEP mudou, o frete anterior não pode mais ser utilizado
+        if (cepAplicado !== null && cepAtual !== cepAplicado.replace(/\D/g, "")) {
+
+            freteSelecionado = 0;
+            cepAplicado = null;
+
+            // Invalida qualquer requisição anterior em andamento
+            requisicaoFrete++;
+
+            opcoesFrete.innerHTML = "";
+            valorFrete.textContent = formatarMoeda(0);
+
+            atualizarBotaoRemoverFrete();
+            atualizarResumoCarrinho();
+
+        }
+
+    });
+
+}
 
 function atualizarResumoCarrinho() {
 
@@ -1123,21 +1124,32 @@ if (btnFinalizar) {
             return;
         }
 
-        // Verifica o CEP
+        // Verifica o CEP informado
         const cepDigitado = campoCEP.value.trim();
         const cepNumeros = cepDigitado.replace(/\D/g, "");
 
-        const cep = cepNumeros.length === 8
-            ? cepNumeros.replace(/^(\d{5})(\d{3})$/, "$1-$2")
-            : cepDigitado;
+        // Verifica se o CEP possui oito números
+        if (cepNumeros.length !== 8) {
 
-            // Verifica se o cliente selecionou uma opção de frete
-            const freteMarcado = document.querySelector('input[name="frete"]:checked');
+            mostrarNotificacao("Informe um CEP válido antes de finalizar o pedido.","aviso");
 
-            if (!freteMarcado) {
-                 mostrarNotificacao("Selecione uma opção de frete antes de finalizar o pedido.", "aviso");
-                return;
-            }
+            return;
+        }
+
+        const cep = cepNumeros.replace(
+            /^(\d{5})(\d{3})$/,
+            "$1-$2"
+        );
+
+        // Verifica se existe uma opção de frete selecionada
+        const freteMarcado = document.querySelector(
+            'input[name="frete"]:checked'
+        );
+
+        if (!freteMarcado || cepAplicado !== cep) {
+            mostrarNotificacao("Calcule e selecione uma opção de frete para o CEP informado.", "aviso");
+            return;
+        }
 
         // Verifica a forma de pagamento
         const pagamentoSelecionado = document.querySelector('input[name="metodoPagamento"]:checked');
@@ -1171,7 +1183,7 @@ if (btnFinalizar) {
             const cartao = numeroCartao.value.trim();
 
             if (!cartao) {
-                 mostrarNotificacao("Informe o número do cartão.", "aviso");
+                mostrarNotificacao("Informe o número do cartão.", "aviso");
                 return;
             }
 
@@ -1231,7 +1243,7 @@ if (btnFinalizar) {
                 (subtotal - desconto + frete).toFixed(2)
             );
 
-           
+
             // Guarda o pedido, os produtos e os valores calculados
             const pedidoSalvo = {
                 ...dados.pedido,
@@ -1275,37 +1287,19 @@ if (btnFinalizar) {
             // Redireciona para a página de sucesso
             window.location.href = "sucesso-pedido.html";
 
-        } catch (erro) {
 
+        } catch (erro) {
             console.error("Erro ao finalizar pedido:", erro);
 
-            // Tratamento dos erros da API
-            if (erro.status === 400) {
+            // Exibe a mensagem retornada pela API
+            const tipo = erro.status === 402 ? "erro" : "aviso";
 
-                mostrarNotificacao("Dados inválidos: " + erro.message,"aviso");
-
-            } else if (erro.status === 402) {
-
-                mostrarNotificacao("Pagamento recusado. Verifique os dados do cartão ou utilize outro cartão.", "erro");
-
-            } else if (erro.status === 404) {
-
-                mostrarNotificacao("Um produto do seu carrinho não foi encontrado. Atualize seu carrinho.", "aviso");
-
-            } else if (erro.status === 422) {
-
-                mostrarNotificacao("Estoque insuficiente: " + erro.message, "aviso");
-
-            } else {
-
-                mostrarNotificacao("Não foi possível finalizar o pedido: " + erro.message, "erro");
-
-            }
+            mostrarNotificacao(erro.message, tipo);
 
             btnFinalizar.disabled = false;
             btnFinalizar.textContent = "Finalizar Pedido";
-
         }
+
 
     });
 
@@ -1316,32 +1310,27 @@ if (btnFinalizar) {
 if (btnCalcularFrete) {
 
     btnCalcularFrete.addEventListener("click", async function () {
-        freteSelecionado = 0;
 
-        atualizarResumoCarrinho();
+        // Identifica esta requisição
+        const minhaRequisicao = ++requisicaoFrete;
+
+        // Limpa qualquer frete selecionado anteriormente
+        freteSelecionado = 0;
+        cepAplicado = null;
 
         opcoesFrete.innerHTML = "";
-
         valorFrete.textContent = formatarMoeda(0);
 
+        atualizarBotaoRemoverFrete();
+        atualizarResumoCarrinho();
+
+        // Recupera e valida o CEP
         const cep = campoCEP.value.replace(/\D/g, "");
 
-        if (cep.length !== 8) {
-
-            mostrarNotificacao("Informe um CEP válido com 8 números.","aviso");
-
-            return;
-        }
-
-        const cepFormatado = cep.replace(
-            /^(\d{5})(\d{3})$/,
-            "$1-$2"
-        );
+        const cepFormatado = cep.replace(/^(\d{5})(\d{3})$/, "$1-$2");
 
         try {
-
             const dados = await requisicaoAPI("/api/frete", {
-
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -1349,9 +1338,24 @@ if (btnCalcularFrete) {
                 body: JSON.stringify({
                     cep: cepFormatado
                 })
-
             });
 
+            // Ignora a resposta se uma requisição mais recente já começou
+            if (minhaRequisicao !== requisicaoFrete) {
+                return;
+            }
+
+            // Verifica se a API retornou opções de frete
+            if (!dados.fretes || dados.fretes.length === 0) {
+
+                mostrarNotificacao("Nenhuma opção de frete disponível para este CEP.",
+                    "aviso"
+                );
+
+                return;
+            }
+
+            // Exibe as opções retornadas pela API
             opcoesFrete.innerHTML = "";
 
             dados.fretes.forEach(function (frete, indice) {
@@ -1388,7 +1392,10 @@ if (btnCalcularFrete) {
 
             });
 
-            const radiosFrete = document.querySelectorAll('input[name="frete"]');
+            // Recupera os botões de seleção de frete
+            const radiosFrete = document.querySelectorAll(
+                'input[name="frete"]'
+            );
 
             radiosFrete.forEach(function (radio) {
 
@@ -1398,36 +1405,20 @@ if (btnCalcularFrete) {
 
                     const freteEscolhido = dados.fretes[indice];
 
+                    // Guarda o valor e o CEP correspondente
                     freteSelecionado = Number(freteEscolhido.valor);
+                    cepAplicado = cepFormatado;
 
                     atualizarResumoCarrinho();
+                    atualizarBotaoRemoverFrete();
 
                 });
 
             });
 
         } catch (erro) {
-
             console.error("Erro ao calcular frete:", erro);
-
-            if (erro.status === 400) {
-
-                 mostrarNotificacao("Formato de CEP inválido.","aviso");
-
-            } else if (erro.status === 404) {
-
-                mostrarNotificacao("CEP não encontrado.","aviso");
-
-            } else if (erro.status === 422) {
-
-                mostrarNotificacao("Região não atendida para entrega.","aviso");
-
-            } else {
-
-                mostrarNotificacao(erro.message,"erro");
-
-            }
-
+            mostrarNotificacao("error " + erro.status + " - " + erro.message,"erro");
         }
 
     });
@@ -1439,12 +1430,28 @@ if (btnRemoverFrete) {
 
     btnRemoverFrete.addEventListener("click", function () {
 
+        // Limpa o frete e o CEP associado
         freteSelecionado = 0;
+        cepAplicado = null;
 
+        // Invalida possíveis requisições em andamento
+        requisicaoFrete++;
+
+        // Desmarca as opções de frete
         document.querySelectorAll('input[name="frete"]').forEach(function (radio) {
             radio.checked = false;
         });
 
+        // Limpa as opções exibidas
+        opcoesFrete.innerHTML = "";
+
+        // Zera o valor do frete
+        valorFrete.textContent = formatarMoeda(0);
+
+        // Esconde novamente o botão
+        atualizarBotaoRemoverFrete();
+
+        // Atualiza o resumo do pedido
         atualizarResumoCarrinho();
 
     });
@@ -1625,7 +1632,7 @@ if (listaPedidos) {
 }
 
 
- // CANCELAR PEDIDO
+// CANCELAR PEDIDO
 if (listaPedidos) {
 
     listaPedidos.addEventListener("click", async function (e) {
@@ -1669,7 +1676,7 @@ if (listaPedidos) {
                 return String(p.protocolo) === String(protocolo);
             });
 
-            
+
             // Atualiza o status no armazenamento local
             if (pedido) {
                 pedido.status = "cancelado";
@@ -1680,7 +1687,7 @@ if (listaPedidos) {
                 JSON.stringify(pedidos)
             );
 
-           // Atualiza visualmente o botão
+            // Atualiza visualmente o botão
             botao.disabled = true;
             botao.className = "btn btn-secondary";
             botao.innerHTML = `
@@ -1922,4 +1929,3 @@ if (detalhesPedido) {
     }
 
 }
-

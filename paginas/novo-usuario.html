@@ -41,7 +41,7 @@
 
 
                             <li id="menuPerfil" style="display:none;">
-                                <a class="dropdown-item" href="meus-dados.html">Meus dados</a>
+                                <a class="dropdown-item" href="dados_pessoais.htm">Meus dados</a>
                             </li>
                             <li id="menuPedidos" style="display:none;">
                                 <a class="dropdown-item" href="meus-pedidos.html">Meus Pedidos</a>
@@ -79,7 +79,7 @@
 
 
                 </ul>
-                
+
             </div>
         </div>
     </nav>
@@ -100,15 +100,14 @@
                                 Criar conta
                             </h2>
 
-                            <form id="form-cadastro">
+                            <form id="form-cadastro" novalidate>
 
                                 <div class="mb-3">
                                     <label for="nome" class="form-label">
                                         Nome completo *
                                     </label>
 
-                                    <input type="text" class="form-control" id="nome"
-                                        placeholder="Digite seu nome completo" required>
+                                    <input type="text" class="form-control" id="nome" placeholder="Digite seu nome completo">
                                 </div>
 
                                 <div class="mb-3">
@@ -116,8 +115,7 @@
                                         E-mail *
                                     </label>
 
-                                    <input type="email" class="form-control" id="email" placeholder="Digite seu e-mail"
-                                        required>
+                                    <input type="text" class="form-control" id="email" placeholder="Digite seu e-mail">
                                 </div>
 
                                 <div class="mb-3">
@@ -126,7 +124,7 @@
                                     </label>
 
                                     <input type="password" class="form-control" id="senha"
-                                        placeholder="Digite sua senha" required>
+                                        placeholder="Digite sua senha">
                                 </div>
 
                                 <div class="mb-3">
@@ -134,8 +132,7 @@
                                         Confirmar senha *
                                     </label>
 
-                                    <input type="password" class="form-control" id="confirmarSenha"
-                                        placeholder="Digite sua senha novamente" required>
+                                    <input type="password" class="form-control" id="confirmarSenha" placeholder="Digite sua senha novamente">
                                 </div>
 
                                 <div class="d-grid">
@@ -197,45 +194,6 @@
                     <p class="mb-0">Redirecionando...</p>
                 </div>
 
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalSenhaDiferente" tabindex="-1" aria-labelledby="modalSenhaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="modalSenhaLabel">Atenção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <h4>⚠️ As senhas não conferem!</h4>
-                    <p class="mb-0">A senha e a confirmação de senha devem ser idênticas.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Corrigir</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEmailExiste" tabindex="-1" aria-labelledby="modalEmailExisteLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="modalEmailExisteLabel">E-mail já cadastrado</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <h4>⚠️ Este e-mail já está em uso!</h4>
-                    <p class="mb-0">Já existe uma conta cadastrada com esse e-mail. Tente fazer login ou use outro
-                        e-mail.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <a href="login.html" class="btn btn-success">Ir para Login</a>
-                </div>
             </div>
         </div>
     </div>
