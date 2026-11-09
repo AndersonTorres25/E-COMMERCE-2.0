@@ -232,16 +232,16 @@ if (formulario) {
             localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
             // Mostra o modal de sucesso
-            const modal = new bootstrap.Modal( document.getElementById("modalSucesso") );
+            const modal = new bootstrap.Modal(document.getElementById("modalSucesso"));
 
             modal.show();
 
             // Redireciona para a página inicial
-            setTimeout(function () { window.location.href = "../index.html";}, 3000);
+            setTimeout(function () { window.location.href = "../index.html"; }, 3000);
 
         } catch (erro) {
             console.error("Erro no login:", erro);
-            mostrarNotificacao("Erro " + erro.status + " - " + erro.message,"erro" );
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
         }
     });
 }
@@ -350,7 +350,6 @@ if (formularioCadastro) {
                 })
             });
 
-            // Cadastro realizado com sucesso
             const modal = new bootstrap.Modal(
                 document.getElementById("modalCadastro")
             );
@@ -365,7 +364,7 @@ if (formularioCadastro) {
 
         } catch (erro) {
             console.error("Erro no cadastro:", erro);
-              mostrarNotificacao("Erro " + erro.status + " - " + erro.message,"erro");
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
         }
 
     });
@@ -1127,19 +1126,7 @@ if (btnFinalizar) {
         // Verifica o CEP informado
         const cepDigitado = campoCEP.value.trim();
         const cepNumeros = cepDigitado.replace(/\D/g, "");
-
-        // Verifica se o CEP possui oito números
-        if (cepNumeros.length !== 8) {
-
-            mostrarNotificacao("Informe um CEP válido antes de finalizar o pedido.","aviso");
-
-            return;
-        }
-
-        const cep = cepNumeros.replace(
-            /^(\d{5})(\d{3})$/,
-            "$1-$2"
-        );
+        const cep = cepNumeros.replace(/^(\d{5})(\d{3})$/, "$1-$2");
 
         // Verifica se existe uma opção de frete selecionada
         const freteMarcado = document.querySelector(
@@ -1292,9 +1279,7 @@ if (btnFinalizar) {
             console.error("Erro ao finalizar pedido:", erro);
 
             // Exibe a mensagem retornada pela API
-            const tipo = erro.status === 402 ? "erro" : "aviso";
-
-            mostrarNotificacao(erro.message, tipo);
+                mostrarNotificacao("error " + erro.status + " - " + erro.message, "erro" );
 
             btnFinalizar.disabled = false;
             btnFinalizar.textContent = "Finalizar Pedido";
@@ -1340,18 +1325,12 @@ if (btnCalcularFrete) {
                 })
             });
 
-            // Ignora a resposta se uma requisição mais recente já começou
-            if (minhaRequisicao !== requisicaoFrete) {
-                return;
-            }
-
             // Verifica se a API retornou opções de frete
             if (!dados.fretes || dados.fretes.length === 0) {
 
                 mostrarNotificacao("Nenhuma opção de frete disponível para este CEP.",
                     "aviso"
                 );
-
                 return;
             }
 
@@ -1417,8 +1396,12 @@ if (btnCalcularFrete) {
             });
 
         } catch (erro) {
+            // Ignora a resposta se uma requisição mais recente já começou
+            if (minhaRequisicao !== requisicaoFrete) {
+                return;
+            }
             console.error("Erro ao calcular frete:", erro);
-            mostrarNotificacao("error " + erro.status + " - " + erro.message,"erro");
+            mostrarNotificacao("error " + erro.status + " - " + erro.message, "erro");
         }
 
     });
@@ -1609,14 +1592,30 @@ if (listaPedidos) {
                                 <i class="bi bi-eye"></i>
                                 Visualizar Detalhes
                             </a>
-                           <button type="button"
-                                class="btn ${String(pedido.status).toLowerCase() === "cancelado" ? "btn-secondary" : "btn-outline-danger"} btn-cancelar-pedido" data-protocolo="${pedido.protocolo}" ${String(pedido.status).toLowerCase() === "cancelado" ? "disabled" : ""}>
+
+                            ${String(pedido.status).toLowerCase() !== "enviado" &&
+                                                String(pedido.status).toLowerCase() !== "cancelado" ? `
+                                <button type="button"
+                                    class="btn btn-primary btn-marcar-enviado"
+                                    data-protocolo="${pedido.protocolo}">
+
+                                    <i class="bi bi-truck"></i>
+                                    Marcar como Enviado
+
+                                </button>
+                            ` : ""}
+
+                            <button type="button"
+                                class="btn ${String(pedido.status).toLowerCase() === "cancelado" ? "btn-secondary" : "btn-outline-danger"} btn-cancelar-pedido"
+                                data-protocolo="${pedido.protocolo}"
+                                ${String(pedido.status).toLowerCase() === "cancelado" ? "disabled" : ""}>
 
                                 <i class="bi ${String(pedido.status).toLowerCase() === "cancelado" ? "bi-check-circle-fill" : "bi-x-circle"}"></i>
 
                                 ${String(pedido.status).toLowerCase() === "cancelado" ? "Pedido Cancelado" : "Cancelar Pedido"}
 
                             </button>
+
                         </div>
                     </div>
                 `;
@@ -1631,22 +1630,71 @@ if (listaPedidos) {
 
 }
 
-
-// CANCELAR PEDIDO
+// MARCAR PEDIDO COMO ENVIADO
 if (listaPedidos) {
 
-    listaPedidos.addEventListener("click", async function (e) {
+    listaPedidos.addEventListener("click", function (e) {
 
-        // Verifica se o clique foi no botão de cancelar
-        const botao = e.target.closest(".btn-cancelar-pedido");
+        const botao = e.target.closest(".btn-marcar-enviado");
 
         if (!botao) return;
 
         // Recupera o protocolo do pedido
         const protocolo = botao.dataset.protocolo;
 
-        // Confirmação antes de cancelar
-        const confirmar = await confirmarAcao("Tem certeza de que deseja cancelar este pedido?");
+        // Recupera o usuário conectado
+        const usuario = JSON.parse(dadosUsuario);
+
+        // Identifica os pedidos dessa conta
+        const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
+
+        const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+
+        // Localiza o pedido
+        const pedido = pedidos.find(function (p) {
+            return String(p.protocolo) === String(protocolo);
+        });
+
+        if (!pedido) return;
+
+        // Atualiza o status
+        pedido.status = "ENVIADO";
+
+        // Salva a alteração
+        localStorage.setItem(chavePedidos, JSON.stringify(pedidos));
+
+        // Atualiza a etiqueta de status
+        const cardPedido = botao.closest(".card");
+
+        if (cardPedido) {
+
+            const etiquetaStatus = cardPedido.querySelector(".badge");
+
+            if (etiquetaStatus) {
+                etiquetaStatus.textContent = "enviado";
+                etiquetaStatus.className = "badge bg-primary";
+            }
+        }
+
+        // Remove o botão Marcar como Enviado
+        botao.remove();
+        mostrarNotificacao("Pedido marcado como enviado com sucesso.", "sucesso");
+    });
+}
+
+// CANCELAR PEDIDO
+if (listaPedidos) {
+    listaPedidos.addEventListener("click", async function (e) {
+
+        const botao = e.target.closest(".btn-cancelar-pedido");
+
+        if (!botao) return;
+
+        const protocolo = botao.dataset.protocolo;
+
+        const confirmar = await confirmarAcao(
+            "Tem certeza de que deseja cancelar este pedido?"
+        );
 
         if (!confirmar) return;
 
@@ -1654,30 +1702,34 @@ if (listaPedidos) {
         botao.textContent = "Cancelando...";
 
         try {
-
-            // Envia a solicitação de cancelamento para a API
-            await requisicaoAPI(
-                "/api/pedido?protocolo=" + encodeURIComponent(protocolo),
-                {
-                    method: "DELETE"
-                }
-            );
-
-            // Recupera o usuário conectado
+            // Identifica o usuário e recupera seus pedidos
             const usuario = JSON.parse(dadosUsuario);
 
-            // Identifica os pedidos dessa conta
             const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
 
-            const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
+            const pedidos = JSON.parse(
+                localStorage.getItem(chavePedidos)
+            ) || [];
 
-            // Localiza o pedido cancelado
+            // Localiza o pedido selecionado
             const pedido = pedidos.find(function (p) {
                 return String(p.protocolo) === String(protocolo);
             });
 
+            // Verifica se o pedido está marcado como enviado
+            const protocoloAPI = pedido &&
+                pedido.status.toUpperCase() === "ENVIADO"
+                ? "PED-ENVIADO"
+                : protocolo;
 
-            // Atualiza o status no armazenamento local
+            // Solicita o cancelamento à API
+            const dados = await requisicaoAPI(
+                "/api/pedido?protocolo=" +
+                encodeURIComponent(protocoloAPI),
+                { method: "DELETE" }
+            );
+
+            // Atualiza o pedido somente se a API confirmar o sucesso
             if (pedido) {
                 pedido.status = "cancelado";
             }
@@ -1687,63 +1739,43 @@ if (listaPedidos) {
                 JSON.stringify(pedidos)
             );
 
-            // Atualiza visualmente o botão
             botao.disabled = true;
             botao.className = "btn btn-secondary";
+
             botao.innerHTML = `
                 <i class="bi bi-check-circle-fill"></i>
                 Pedido Cancelado
             `;
 
-            // Atualiza a etiqueta de status do pedido
+            // Atualiza a etiqueta de status
             const cardPedido = botao.closest(".card");
 
             if (cardPedido) {
-
                 const etiquetaStatus = cardPedido.querySelector(".badge");
 
                 if (etiquetaStatus) {
                     etiquetaStatus.textContent = "cancelado";
                     etiquetaStatus.className = "badge bg-secondary";
                 }
-
             }
 
-            mostrarNotificacao("Pedido cancelado com sucesso!", "sucesso");
+            mostrarNotificacao(dados.mensagem, "sucesso");
 
         } catch (erro) {
 
             console.error("Erro ao cancelar pedido:", erro);
 
-            if (erro.status === 400) {
-
-                mostrarNotificacao("Protocolo do pedido não informado.", "aviso");
-
-            } else if (erro.status === 404) {
-
-                mostrarNotificacao("Pedido não encontrado.", "aviso");
-
-            } else if (erro.status === 422) {
-
-                mostrarNotificacao("Este pedido não pode ser cancelado porque já foi enviado.", "aviso");
-
-            } else {
-
-                mostrarNotificacao("Não foi possível cancelar o pedido: " + erro.message, "erro");
-            }
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
 
             botao.disabled = false;
+
             botao.innerHTML = `
                 <i class="bi bi-x-circle"></i>
                 Cancelar Pedido
             `;
-
         }
-
     });
-
 }
-
 
 // DETALHES DO PEDIDO
 const detalhesPedido = document.querySelector("#detalhesPedido");
