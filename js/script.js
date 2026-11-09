@@ -160,7 +160,6 @@ function confirmarAcao(mensagem) {
         modalNotificacao.show();
 
     });
-
 }
 
 // Botão Sim
@@ -191,7 +190,6 @@ elementoNotificacao.addEventListener(
             resolverNotificacao(resultadoNotificacao);
             resolverNotificacao = null;
         }
-
     }
 );
 
@@ -391,7 +389,6 @@ if (dadosUsuario) {
     if (nomeUsuEnd) {
         nomeUsuEnd.textContent = usuario.nome;
     }
-
 }
 
 let produtos = [];
@@ -435,9 +432,9 @@ async function listarProdutos() {
                             </p>
 
                             ${produto.stock === 0
-                    ? '<p class="text-danger fw-bold">Produto esgotado</p>'
-                    : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
-                }
+                                 ? '<p class="text-danger fw-bold">Produto esgotado</p>'
+                                 : `<p class="text-success">Estoque: ${produto.stock} unidade(s)</p>`
+                            }
 
                             <p class="mt-auto">
                                 <strong>R$ ${Number(produto.price).toFixed(2).replace(".", ",")}</strong>
@@ -465,7 +462,6 @@ async function listarProdutos() {
 
         mostrarNotificacao("Erro " + erro.status + " - " + erro.message,"erro");
     }
-
 }
 
 listarProdutos();
@@ -573,7 +569,6 @@ if (formBusca && campoBusca && filtroCategoria) {
         clearTimeout(temporizadorBusca);
 
         buscarProdutos();
-
     });
 
     // Debounce
@@ -584,7 +579,6 @@ if (formBusca && campoBusca && filtroCategoria) {
         temporizadorBusca = setTimeout(function () {
             buscarProdutos();
         }, 500);
-
     });
 
     // Filtra a categoria
@@ -593,11 +587,8 @@ if (formBusca && campoBusca && filtroCategoria) {
         clearTimeout(temporizadorBusca);
 
         buscarProdutos();
-
     });
-
 }
-
 
 //TOAST DO CARRINHO
 const elementoToast = document.querySelector("#toastCarrinho");
@@ -609,7 +600,6 @@ if (elementoToast && typeof bootstrap !== "undefined") {
         delay: 3000
     });
 }
-
 
 // Botão adicionar produto ao carrinho
 if (listaProdutos) {
@@ -647,7 +637,6 @@ if (listaProdutos) {
                 imagem: produto.image,
                 quantidade: 1
             });
-
         }
 
         localStorage.setItem("carrinho", JSON.stringify(carrinho));
@@ -657,9 +646,7 @@ if (listaProdutos) {
         if (toastCarrinho) {
             toastCarrinho.show();
         }
-
     });
-
 }
 
 //Atualizar o badge
@@ -754,11 +741,9 @@ function mostrarCarrinho() {
 
 mostrarCarrinho();
 
-
 function formatarMoeda(valor) {
     return "R$ " + valor.toFixed(2).replace(".", ",");
 }
-
 
 // Atualizar resumo do carrinho
 let freteSelecionado = 0;
@@ -789,7 +774,6 @@ function atualizarBotaoRemoverFrete() {
     if (btnRemoverFrete) {
         btnRemoverFrete.hidden = cepAplicado === null;
     }
-
 }
 
 // Esconde o botão assim que a página é carregada
@@ -814,11 +798,8 @@ if (campoCEP) {
 
             atualizarBotaoRemoverFrete();
             atualizarResumoCarrinho();
-
         }
-
     });
-
 }
 
 function atualizarResumoCarrinho() {
@@ -944,9 +925,7 @@ if (btnAplicarCupom) {
             mensagemCupom.className = "mt-2 text-danger";
 
         }
-
     });
-
 }
 
 // REMOVER CUPOM DE DESCONTO
@@ -962,9 +941,7 @@ if (btnRemoverCupom) {
         mensagemCupom.className = "mt-2 text-success";
 
         atualizarResumoCarrinho();
-
     });
-
 }
 
 function ativarCamposQuantidade() {
@@ -1222,7 +1199,6 @@ if (btnFinalizar) {
                 totalFinal: totalFinal
             };
 
-
             const usuario = JSON.parse(dadosUsuario);
 
             const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
@@ -1231,18 +1207,15 @@ if (btnFinalizar) {
 
             pedidos.push(pedidoSalvo);
 
-            // Salva os pedidos na conta correspondente
             localStorage.setItem(chavePedidos, JSON.stringify(pedidos));
 
-            // Limpa o carrinho somente após sucesso
             localStorage.removeItem("carrinho");
 
-            if (dados.mensagem) {
-                sessionStorage.setItem("mensagemPedido", dados.mensagem);
-            }
+            mostrarNotificacao(dados.mensagem, "sucesso");
 
-            // Redireciona para a página de sucesso
-            window.location.href = "sucesso-pedido.html";
+            setTimeout(function () {
+                window.location.href = "sucesso-pedido.html";
+            }, 2000);
 
 
         } catch (erro) {
@@ -1463,10 +1436,8 @@ if (listaPedidos) {
 
     } else {
 
-        // Identifica o usuário conectado
         const usuario = JSON.parse(dadosUsuario);
 
-        // Recupera somente os pedidos desse usuário
         const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
 
         const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
@@ -1493,7 +1464,6 @@ if (listaPedidos) {
                     ? formatarMoeda(totalPedido)
                     : "Não informado";
 
-                // Cria o card do pedido
                 const card = document.createElement("div");
 
                 card.className = "card shadow-sm mb-4";
@@ -1568,13 +1538,9 @@ if (listaPedidos) {
                 `;
 
                 listaPedidos.appendChild(card);
-
             });
-
         }
-
     }
-
 }
 
 // MARCAR PEDIDO COMO ENVIADO
@@ -1639,9 +1605,7 @@ if (listaPedidos) {
 
         const protocolo = botao.dataset.protocolo;
 
-        const confirmar = await confirmarAcao(
-            "Tem certeza de que deseja cancelar este pedido?"
-        );
+        const confirmar = await confirmarAcao("Tem certeza de que deseja cancelar este pedido?");
 
         if (!confirmar) return;
 
@@ -1649,25 +1613,18 @@ if (listaPedidos) {
         botao.textContent = "Cancelando...";
 
         try {
-            // Identifica o usuário e recupera seus pedidos
             const usuario = JSON.parse(dadosUsuario);
 
             const chavePedidos = "pedidos_" + usuario.email.toLowerCase();
 
-            const pedidos = JSON.parse(
-                localStorage.getItem(chavePedidos)
-            ) || [];
+            const pedidos = JSON.parse(localStorage.getItem(chavePedidos)) || [];
 
-            // Localiza o pedido selecionado
             const pedido = pedidos.find(function (p) {
                 return String(p.protocolo) === String(protocolo);
             });
 
             // Verifica se o pedido está marcado como enviado
-            const protocoloAPI = pedido &&
-                pedido.status.toUpperCase() === "ENVIADO"
-                ? "PED-ENVIADO"
-                : protocolo;
+            const protocoloAPI = pedido && pedido.status.toUpperCase() === "ENVIADO" ? "PED-ENVIADO" : protocolo;
 
             // Solicita o cancelamento à API
             const dados = await requisicaoAPI(
@@ -1681,10 +1638,7 @@ if (listaPedidos) {
                 pedido.status = "cancelado";
             }
 
-            localStorage.setItem(
-                chavePedidos,
-                JSON.stringify(pedidos)
-            );
+            localStorage.setItem(chavePedidos, JSON.stringify(pedidos));
 
             botao.disabled = true;
             botao.className = "btn btn-secondary";
@@ -1902,9 +1856,6 @@ if (detalhesPedido) {
                 </div>
 
             `;
-
         }
-
     }
-
 }
