@@ -889,6 +889,15 @@ if (btnAplicarCupom) {
             subtotal += produto.preco * produto.quantidade;
         });
 
+        // Verifica se o carrinho está vazio
+        if (carrinho.length === 0) {
+
+            mensagemCupom.textContent = "Adicione produtos ao carrinho antes de aplicar um cupom.";
+            mensagemCupom.className = "mt-2 text-warning";
+
+            return;
+        }
+
         const corpo = {
             codigo: codigo
         };
@@ -912,6 +921,9 @@ if (btnAplicarCupom) {
             });
 
             cupomAplicado = dados.cupom;
+
+            console.log("Cupom retornado pela API:", dados.cupom);
+            console.log("Subtotal do carrinho:", subtotal);
 
             atualizarResumoCarrinho();
             atualizarBotaoRemoverCupom();
@@ -1246,6 +1258,15 @@ if (btnCalcularFrete) {
 
     btnCalcularFrete.addEventListener("click", async function () {
 
+        // Verifica se o carrinho está vazio
+        const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+
+        if (carrinho.length === 0) {
+
+            mostrarNotificacao("Adicione produtos ao carrinho antes de calcular o frete.", "aviso");
+
+            return;
+        }
         const minhaRequisicao = ++requisicaoFrete;
 
         freteSelecionado = 0;
@@ -1576,6 +1597,15 @@ if (listaPedidos) {
 
         if (!pedido) return;
 
+        // Impede o envio de um pedido cancelado
+        if (String(pedido.status).toLowerCase() === "cancelado") {
+
+            mostrarNotificacao("Não é possível enviar um pedido que já foi cancelado.", "aviso");
+
+            botao.remove();
+
+            return;
+        }
         // Atualiza o status
         pedido.status = "ENVIADO";
 
@@ -1590,9 +1620,10 @@ if (listaPedidos) {
             const etiquetaStatus = cardPedido.querySelector(".badge");
 
             if (etiquetaStatus) {
-                etiquetaStatus.textContent = "enviado";
-                etiquetaStatus.className = "badge bg-primary";
+                  etiquetaStatus.textContent = "ENVIADO";
+                  etiquetaStatus.className = "badge bg-primary";
             }
+
         }
 
         // Remove o botão Marcar como Enviado
@@ -1663,6 +1694,12 @@ if (listaPedidos) {
                 if (etiquetaStatus) {
                     etiquetaStatus.textContent = "cancelado";
                     etiquetaStatus.className = "badge bg-secondary";
+                }
+                 // Remove o botão Marcar como Enviado
+                const botaoEnviar = cardPedido.querySelector(".btn-marcar-enviado");
+
+                if (botaoEnviar) {
+                    botaoEnviar.remove();
                 }
             }
 
