@@ -231,15 +231,15 @@ if (formulario) {
 
             localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
-            if (dados.mensagem) {
-                mostrarNotificacao(dados.mensagem, "sucesso");
-            } else {
-                const modal = new bootstrap.Modal(
-                    document.getElementById("modalSucesso")
-                );
+            const loginSucesso = document.querySelector("#loginSucesso");
 
-                modal.show();
+            if(loginSucesso) {
+                document.querySelector("#loginSucesso").textContent = "✅ " + dados.mensagem;
             }
+
+            const modal = new bootstrap.Modal(document.getElementById("modalSucesso"));
+            modal.show();
+            
 
             setTimeout(function () { window.location.href = "../index.html"; }, 3000);
 
@@ -350,16 +350,14 @@ if (formularioCadastro) {
                 })
             });
 
-            if (dados.mensagem) {
-                mostrarNotificacao(dados.mensagem, "sucesso");
-            } else {
-                const modal = new bootstrap.Modal(
-                    document.getElementById("modalCadastro")
-                );
-
-                modal.show();
+            const cadastroSucesso = document.getElementById("cadastroSucesso");
+            if(cadastroSucesso){
+                document.getElementById("cadastroSucesso").textContent = "✅" + dados.mensagem;
             }
 
+            const modal = new bootstrap.Modal(document.getElementById("modalCadastro"));
+            modal.show();
+            
             formularioCadastro.reset();
 
             setTimeout(function () { window.location.href = "login.html";}, 2000);
@@ -766,6 +764,15 @@ const mensagemCupom = document.querySelector("#mensagemCupom");
 const valorDesconto = document.querySelector("#valorDesconto");
 const btnRemoverCupom = document.querySelector("#btnRemoverCupom");
 
+function atualizarBotaoRemoverCupom() {
+
+    if (btnRemoverCupom) {
+        btnRemoverCupom.hidden = !cupomAplicado;
+    }
+}
+
+atualizarBotaoRemoverCupom();
+
 const campoCEP = document.querySelector("#cep");
 const btnCalcularFrete = document.querySelector("#btnCalcularFrete");
 const opcoesFrete = document.querySelector("#opcoesFrete");
@@ -874,12 +881,6 @@ if (btnAplicarCupom) {
 
         const codigo = campoCupom.value.trim().toUpperCase();
 
-        if (!codigo) {
-            mensagemCupom.textContent = "Digite um código de cupom.";
-            mensagemCupom.className = "mt-2 text-danger";
-            return;
-        }
-
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
         let subtotal = 0;
@@ -913,6 +914,7 @@ if (btnAplicarCupom) {
             cupomAplicado = dados.cupom;
 
             atualizarResumoCarrinho();
+            atualizarBotaoRemoverCupom();
 
             mensagemCupom.textContent = dados.mensagem;
             mensagemCupom.className = "mt-2 text-success";
@@ -937,7 +939,17 @@ if (btnRemoverCupom) {
 
     btnRemoverCupom.addEventListener("click", function () {
 
+        // Verifica se existe algum cupom aplicado
+        if (!cupomAplicado) {
+
+            mensagemCupom.textContent = "Não há nenhum cupom aplicado para remover.";
+            mensagemCupom.className = "mt-2 text-warning";
+
+            return;
+        }
+
         cupomAplicado = null;
+        atualizarBotaoRemoverCupom();
 
         campoCupom.value = "";
 
@@ -1134,7 +1146,6 @@ if (btnFinalizar) {
 
             });
 
-            // Guarda o pedido retornado pela API
             let subtotal = 0;
 
             carrinho.forEach(function (produto) {
@@ -1202,7 +1213,7 @@ if (btnFinalizar) {
 
             localStorage.removeItem("carrinho");
 
-            mostrarNotificacao( dados.mensagem || "Pedido realizado com sucesso!", "sucesso");
+            mostrarNotificacao( dados.mensagem, "sucesso");
 
             setTimeout(function () {
                 window.location.href = "sucesso-pedido.html";
@@ -1212,20 +1223,23 @@ if (btnFinalizar) {
         } catch (erro) {
             console.error("Erro ao finalizar pedido:", erro);
 
-            const tipo = erro.status === 400 ? "aviso" : "erro";
-            
-            // Exibe a mensagem retornada pela API
-            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, tipo );
+            const carrinhoVazio = document.querySelector("#carrinhoVazio");
+            if (carrinhoVazio && erro.status === 400 && carrinho.length === 0){
+                document.querySelector("#carrinhoVazio").textContent = "Erro " + erro.status + " - " + erro.message;
+
+                const modal = new bootstrap.Modal(document.getElementById("modalCarrinhoVazio"));
+                modal.show();
+            } else{
+                // Exibe a mensagem retornada pela API
+                mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro" );
+
+            }
 
             btnFinalizar.disabled = false;
             btnFinalizar.textContent = "Finalizar Pedido";
         }
-
-
     });
-
 }
-
 
 // CÁLCULO DO FRETE
 if (btnCalcularFrete) {
@@ -1353,10 +1367,8 @@ if (btnRemoverFrete) {
         atualizarBotaoRemoverFrete();
 
         atualizarResumoCarrinho();
-
     });
 }
-
 
 // EXIBIR DADOS DO PEDIDO FINALIZADO
 const numeroPedido = document.querySelector("#numero-pedido");
@@ -1405,11 +1417,8 @@ if (numeroPedido) {
         } else {
 
             document.querySelector(".dados-pedido").textContent = "Nenhum pedido encontrado.";
-
         }
-
     }
-
 }
 
 // MEUS PEDIDOS
@@ -1453,9 +1462,7 @@ if (listaPedidos) {
                     ? Number(pedido.totalFinal)
                     : subtotal - desconto + frete;
 
-                const valorExibido = possuiValores && Number.isFinite(totalPedido)
-                    ? formatarMoeda(totalPedido)
-                    : "Não informado";
+                const valorExibido = possuiValores && Number.isFinite(totalPedido) ? formatarMoeda(totalPedido) : "Não informado";
 
                 const card = document.createElement("div");
 
