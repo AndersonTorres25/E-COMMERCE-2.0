@@ -1923,19 +1923,22 @@ if (formDados) {
 
     const mesclarUsuario = (usuario, novosDados) => ({ ...usuario, ...novosDados });
 
-    function migrarPedidos(emailAntigo, emailNovo) {
+    function migrarChaves(emailAntigo, emailNovo) {
 
-        const chaveAntiga = "pedidos_" + emailAntigo.toLowerCase();
-        const chaveNova = "pedidos_" + emailNovo.toLowerCase();
+        ["pedidos_", "enderecos_"].forEach(function (prefixo) {
 
-        if (chaveAntiga === chaveNova) return;
+            const chaveAntiga = prefixo + emailAntigo.toLowerCase();
+            const chaveNova = prefixo + emailNovo.toLowerCase();
 
-        const pedidos = localStorage.getItem(chaveAntiga);
+            if (chaveAntiga === chaveNova) return;
 
-        if (pedidos) {
-            localStorage.setItem(chaveNova, pedidos);
-            localStorage.removeItem(chaveAntiga);
-        }
+            const valor = localStorage.getItem(chaveAntiga);
+
+            if (valor) {
+                localStorage.setItem(chaveNova, valor);
+                localStorage.removeItem(chaveAntiga);
+            }
+        });
     }
 
     const usuarioAtual = lerUsuario();
@@ -1983,4 +1986,125 @@ if (formDados) {
             mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
         }
     });
+}
+
+// MEUS ENDEREÇOS (somente localStorage)
+const listaEnderecos = document.querySelector("#listaEnderecos");
+
+if (listaEnderecos) {
+
+    const mensagemSemEnderecos = document.querySelector("#mensagemSemEnderecos");
+    const btnNovoEndereco = document.querySelector("#btnNovoEndereco");
+    const formEndereco = document.querySelector("#form-endereco");
+    const erroEndereco = document.querySelector("#erroEndereco");
+    const modalEnderecoElemento = document.querySelector("#modalEndereco");
+
+    const usuarioEnd = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+    // Sem login não há de quem listar endereços
+    if (!usuarioEnd) {
+
+        btnNovoEndereco.hidden = true;
+
+        listaEnderecos.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-warning">Faça login para ver seus endereços.</div>
+            </div>
+        `;
+
+    } else {
+
+        const chaveEnderecos = "enderecos_" + usuarioEnd.email.toLowerCase();
+
+        const lerEnderecos = () => JSON.parse(localStorage.getItem(chaveEnderecos)) || [];
+
+        const salvarEnderecos = (lista) => localStorage.setItem(chaveEnderecos, JSON.stringify(lista));
+
+        // Troca caracteres especiais por texto seguro, já que o usuário digita esses dados
+        const escaparHTML = (texto) => String(texto).replace(/[&<>"']/g, (c) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
+
+        const criarCardEndereco = (endereco) => `
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+
+                        <input type="hidden" class="endereco-id" value="${endereco.id}">
+
+                        <p class="mb-1"><strong>Rua:</strong> ${escaparHTML(endereco.rua)}, nº ${escaparHTML(endereco.numero)}</p>
+                        <p class="mb-1"><strong>CEP:</strong> ${escaparHTML(endereco.cep)}</p>
+                        <p class="mb-3"><strong>Cidade/Estado:</strong> ${escaparHTML(endereco.cidadeEstado)}</p>
+
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-excluir-endereco">
+                            <i class="bi bi-trash"></i> Excluir Endereço
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        `;
+
+        function renderizarEnderecos() {
+
+            const enderecos = lerEnderecos();
+
+            mensagemSemEnderecos.hidden = enderecos.length > 0;
+
+            listaEnderecos.innerHTML = enderecos.map(criarCardEndereco).join("");
+        }
+
+        renderizarEnderecos();
+
+        //Cadastrar novo endereço
+        formEndereco.addEventListener("submit", function (e) {
+
+            e.preventDefault();
+
+            const rua = document.querySelector("#enderecoRua").value.trim();
+            const numero = document.querySelector("#enderecoNumero").value.trim();
+            const cep = document.querySelector("#enderecoCep").value.trim();
+            const cidadeEstado = document.querySelector("#enderecoCidade").value.trim();
+
+            // Todos os campos são obrigatórios
+            if (!rua || !numero || !cep || !cidadeEstado) {
+                erroEndereco.textContent = "Preencha todos os campos.";
+                erroEndereco.hidden = false;
+                return;
+            }
+
+            erroEndereco.hidden = true;
+
+            const novoEndereco = { id: Date.now(), rua, numero, cep, cidadeEstado };
+
+            // [...lista, novo] cria uma lista nova com o endereço no final
+            salvarEnderecos([...lerEnderecos(), novoEndereco]);
+
+            formEndereco.reset();
+
+            bootstrap.Modal.getInstance(modalEnderecoElemento).hide();
+
+            renderizarEnderecos();
+        });
+
+        // Limpa o aviso de erro sempre que o modal for aberto
+        modalEnderecoElemento.addEventListener("show.bs.modal", () => erroEndereco.hidden = true );
+
+        listaEnderecos.addEventListener("click", async function (e) {
+
+            const botao = e.target.closest(".btn-excluir-endereco");
+
+            if (!botao) return;
+
+            const id = botao.closest(".card").querySelector(".endereco-id").value;
+
+            const confirmou = await confirmarAcao("Deseja excluir este endereço?");
+
+            if (!confirmou) return;
+
+            salvarEnderecos(lerEnderecos().filter((endereco) => String(endereco.id) !== id));
+
+            renderizarEnderecos();
+        });
+    }
 }
