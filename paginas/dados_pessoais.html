@@ -79,7 +79,7 @@
 
 
                 </ul>
-                
+
             </div>
         </div>
     </nav>
@@ -100,15 +100,23 @@
                                 Meus dados
                             </h2>
 
-                            <p>
-                                <strong>Nome:</strong>
-                                <span id="dadosNome"></span>
-                            </p>
+                            <form id="form-dados" novalidate>
 
-                            <p>
-                                <strong>E-mail:</strong>
-                                <span id="dadosEmail"></span>
-                            </p>
+                                <div class="mb-3">
+                                    <label for="campoNome" class="form-label">Nome completo</label>
+                                    <input type="text" id="campoNome" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="campoEmail" class="form-label">E-mail</label>
+                                    <input type="email" id="campoEmail" class="form-control">
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    Alterar meus dados
+                                </button>
+
+                            </form>
 
                         </div>
 

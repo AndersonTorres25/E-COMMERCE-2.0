@@ -1902,3 +1902,85 @@ if (detalhesPedido) {
         }
     }
 }
+
+// MEUS DADOS 
+const formDados = document.querySelector("#form-dados");
+
+if (formDados) {
+
+    const campoNome = document.querySelector("#campoNome");
+    const campoEmail = document.querySelector("#campoEmail");
+
+
+    // Lê o usuário salvo no login
+    const lerUsuario = () => JSON.parse(localStorage.getItem("usuarioLogado"));
+
+    // Monta o corpo da requisição, já sem espaços sobrando
+    const montarCorpo = (nome, email) => ({
+        nome: nome.trim(),
+        email: email.trim()
+    });
+
+    const mesclarUsuario = (usuario, novosDados) => ({ ...usuario, ...novosDados });
+
+    function migrarPedidos(emailAntigo, emailNovo) {
+
+        const chaveAntiga = "pedidos_" + emailAntigo.toLowerCase();
+        const chaveNova = "pedidos_" + emailNovo.toLowerCase();
+
+        if (chaveAntiga === chaveNova) return;
+
+        const pedidos = localStorage.getItem(chaveAntiga);
+
+        if (pedidos) {
+            localStorage.setItem(chaveNova, pedidos);
+            localStorage.removeItem(chaveAntiga);
+        }
+    }
+
+    const usuarioAtual = lerUsuario();
+
+    if (usuarioAtual) {
+        campoNome.value = usuarioAtual.nome;
+        campoEmail.value = usuarioAtual.email;
+    } else {
+        mostrarNotificacao("Faça login para alterar seus dados.", "aviso");
+    }
+
+    formDados.addEventListener("submit", async function (e) {
+
+        e.preventDefault();
+
+        const usuario = lerUsuario();
+
+        if (!usuario) {
+            mostrarNotificacao("Faça login para alterar seus dados.", "aviso");
+            return;
+        }
+
+        try {
+
+            const dados = await requisicaoAPI("/api/user", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(montarCorpo(campoNome.value, campoEmail.value))
+            });
+
+            // A API devolve os dados confirmados em dados.dados
+            const usuarioNovo = mesclarUsuario(usuario, dados.dados);
+
+            migrarPedidos(usuario.email, usuarioNovo.email);
+
+            localStorage.setItem("usuarioLogado", JSON.stringify(usuarioNovo));
+
+            atualizarNavbar();  
+
+            mostrarNotificacao(dados.mensagem, "sucesso");
+
+        } catch (erro) {
+
+            console.error("Erro ao alterar dados:", erro);
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
+        }
+    });
+}
