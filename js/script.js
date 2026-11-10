@@ -68,7 +68,7 @@ elementoNotificacao.innerHTML = `
 
                 <button type="button"
                     id="btnFecharNotificacao"
-                    class="btn btn-success"
+                    class="btn btn-secondary"
                     data-bs-dismiss="modal">
                     Entendi
                 </button>
@@ -108,18 +108,22 @@ function mostrarNotificacao(mensagem, tipo = "info") {
     const configuracoes = {
         sucesso: {
             titulo: "Sucesso!",
+            cabecalho: "bg-success text-white",
             botao: "btn-success"
         },
         erro: {
-            titulo: "Atenção!",
+            titulo: "Erro!",
+            cabecalho: "bg-danger text-white",
             botao: "btn-danger"
         },
         info: {
             titulo: "Informação",
+            cabecalho: "bg-primary text-white",
             botao: "btn-primary"
         },
         aviso: {
-            titulo: "Aviso",
+            titulo: "Atenção!",
+            cabecalho: "bg-warning text-dark",
             botao: "btn-warning"
         }
     };
@@ -127,9 +131,9 @@ function mostrarNotificacao(mensagem, tipo = "info") {
     const configuracao = configuracoes[tipo] || configuracoes.info;
 
     tituloNotificacao.textContent = configuracao.titulo;
+    const cabecalhoNotificacao = elementoNotificacao.querySelector(".modal-header");
+    cabecalhoNotificacao.className = "modal-header " + configuracao.cabecalho;
     mensagemNotificacao.textContent = mensagem;
-
-    btnFecharNotificacao.className = "btn " + configuracao.botao;
 
     btnFecharNotificacao.hidden = false;
     btnCancelarNotificacao.hidden = true;
@@ -921,7 +925,7 @@ if (btnAplicarCupom) {
 
             atualizarResumoCarrinho();
 
-            mensagemCupom.textContent = erro.message;
+            mensagemCupom.textContent = "Erro " + erro.status + " - " + erro.message;
             mensagemCupom.className = "mt-2 text-danger";
 
         }
@@ -1063,14 +1067,6 @@ if (btnFinalizar) {
         // Recupera os produtos do carrinho
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
-        if (carrinho.length === 0) {
-
-            const modalCarrinhoVazio = new bootstrap.Modal(document.getElementById("modalCarrinhoVazio"));
-
-            modalCarrinhoVazio.show();
-
-            return;
-        }
 
         // Verifica o CEP informado
         const cepDigitado = campoCEP.value.trim();
@@ -1080,20 +1076,20 @@ if (btnFinalizar) {
         // Verifica se existe uma opção de frete selecionada
         const freteMarcado = document.querySelector('input[name="frete"]:checked');
 
-        if (!freteMarcado || cepAplicado !== cep) {
+        // Verifica se o CEP possui o formato esperado pela API
+        const cepValido = /^\d{5}-\d{3}$/.test(cep);
+
+        if (cepValido && (!freteMarcado || cepAplicado !== cep)) {
+
             mostrarNotificacao("Calcule e selecione uma opção de frete para o CEP informado.", "aviso");
+
             return;
         }
 
         // Verifica a forma de pagamento
         const pagamentoSelecionado = document.querySelector('input[name="metodoPagamento"]:checked');
 
-        if (!pagamentoSelecionado) {
-            mostrarNotificacao("Selecione uma forma de pagamento.", "aviso");
-            return;
-        }
-
-        const metodoPagamento = pagamentoSelecionado.value;
+        const metodoPagamento = pagamentoSelecionado ? pagamentoSelecionado.value : "";
 
         //  Prepara os dados do pedido
         const corpo = {
@@ -1115,11 +1111,6 @@ if (btnFinalizar) {
         if (metodoPagamento === "cartao") {
 
             const cartao = numeroCartao.value.trim();
-
-            if (!cartao) {
-                mostrarNotificacao("Informe o número do cartão.", "aviso");
-                return;
-            }
 
             corpo.numeroCartao = cartao;
         }
@@ -1211,7 +1202,7 @@ if (btnFinalizar) {
 
             localStorage.removeItem("carrinho");
 
-            mostrarNotificacao(dados.mensagem, "sucesso");
+            mostrarNotificacao( dados.mensagem || "Pedido realizado com sucesso!", "sucesso");
 
             setTimeout(function () {
                 window.location.href = "sucesso-pedido.html";
@@ -1221,8 +1212,10 @@ if (btnFinalizar) {
         } catch (erro) {
             console.error("Erro ao finalizar pedido:", erro);
 
+            const tipo = erro.status === 400 ? "aviso" : "erro";
+            
             // Exibe a mensagem retornada pela API
-            mostrarNotificacao("error " + erro.status + " - " + erro.message, "erro" );
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, tipo );
 
             btnFinalizar.disabled = false;
             btnFinalizar.textContent = "Finalizar Pedido";
@@ -1333,7 +1326,7 @@ if (btnCalcularFrete) {
                 return;
             }
             console.error("Erro ao calcular frete:", erro);
-            mostrarNotificacao("error " + erro.status + " - " + erro.message, "erro");
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
         }
     });
 }
@@ -1477,7 +1470,13 @@ if (listaPedidos) {
                                 Pedido: ${pedido.protocolo || "Não informado"}
                             </h5>
 
-                            <span class="badge ${String(pedido.status).toLowerCase() === "cancelado" ? "bg-secondary" : "bg-success"}">
+                            <span class="badge ${
+                                String(pedido.status).toLowerCase() === "cancelado"
+                                    ? "bg-secondary"
+                                    : String(pedido.status).toLowerCase() === "enviado"
+                                        ? "bg-primary"
+                                        : "bg-success"
+                            }">
                                 ${pedido.status || "Não informado"}
                             </span>
 
