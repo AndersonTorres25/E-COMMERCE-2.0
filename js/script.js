@@ -813,6 +813,116 @@ if (campoCEP) {
     });
 }
 
+
+// ENDEREÇO DE ENTREGA NO CARRINHO
+const selectEnderecoEntrega = document.querySelector("#enderecoEntrega");
+const detalhesEnderecoEntrega = document.querySelector("#detalhesEnderecoEntrega");
+
+if (selectEnderecoEntrega) {
+
+    const dadosUsuarioCarrinho = localStorage.getItem("usuarioLogado");
+
+    // Verifica se existe usuário conectado
+    if (!dadosUsuarioCarrinho) {
+
+        selectEnderecoEntrega.innerHTML = `
+            <option value="">Faça login para selecionar um endereço</option>
+        `;
+
+        selectEnderecoEntrega.disabled = true;
+
+        detalhesEnderecoEntrega.textContent = "Faça login para visualizar seus endereços.";
+
+    } else {
+
+        const usuarioCarrinho = JSON.parse(dadosUsuarioCarrinho);
+
+        // Recupera os endereços cadastrados para esse usuário
+        const chaveEnderecosCarrinho = "enderecos_" + usuarioCarrinho.email.toLowerCase();
+
+        const enderecosCarrinho = JSON.parse(localStorage.getItem(chaveEnderecosCarrinho)) || [];
+
+        // Verifica se existem endereços cadastrados
+        if (enderecosCarrinho.length === 0) {
+
+            selectEnderecoEntrega.innerHTML = `
+                <option value="">Nenhum endereço cadastrado</option>
+            `;
+
+            detalhesEnderecoEntrega.textContent = "Você ainda não possui endereços cadastrados. Cadastre um endereço para continuar.";
+
+        } else {
+
+            // Adiciona os endereços ao campo de seleção
+            enderecosCarrinho.forEach(function (endereco) {
+
+                const opcao = document.createElement("option");
+
+                opcao.value = endereco.id;
+
+                opcao.textContent =
+                    endereco.rua + ", nº " + endereco.numero +
+                    " - " + endereco.cidadeEstado;
+
+                selectEnderecoEntrega.appendChild(opcao);
+
+            });
+
+            // Quando o cliente seleciona um endereço
+            selectEnderecoEntrega.addEventListener("change", function () {
+
+                const enderecoSelecionado = enderecosCarrinho.find(function (endereco) {
+
+                    return String(endereco.id) === this.value;
+
+                }, this);
+
+                if (!enderecoSelecionado) {
+
+                    detalhesEnderecoEntrega.textContent = "Selecione um endereço para visualizar os dados de entrega.";
+
+                    campoCEP.value = "";
+
+                    campoCEP.dispatchEvent(new Event("input"));
+
+                    return;
+                }
+
+                // Limpa os detalhes anteriores
+                detalhesEnderecoEntrega.innerHTML = "";
+
+                // Cria os dados do endereço
+                const paragrafoRua = document.createElement("p");
+                paragrafoRua.textContent =
+                    "Endereço: " + enderecoSelecionado.rua +
+                    ", nº " + enderecoSelecionado.numero;
+
+                const paragrafoCEP = document.createElement("p");
+                paragrafoCEP.textContent =
+                    "CEP: " + enderecoSelecionado.cep;
+
+                const paragrafoCidade = document.createElement("p");
+                paragrafoCidade.textContent =
+                    "Cidade/Estado: " + enderecoSelecionado.cidadeEstado;
+
+                // Exibe os dados na página
+                detalhesEnderecoEntrega.appendChild(paragrafoRua);
+                detalhesEnderecoEntrega.appendChild(paragrafoCEP);
+                detalhesEnderecoEntrega.appendChild(paragrafoCidade);
+
+                // Preenche automaticamente o CEP para calcular o frete
+                campoCEP.value = enderecoSelecionado.cep;
+
+                // Avisa ao sistema que o CEP foi alterado
+                campoCEP.dispatchEvent(new Event("input"));
+
+            });
+
+        }
+    }
+}
+
+
 function atualizarResumoCarrinho() {
 
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
@@ -1091,6 +1201,75 @@ if (btnFinalizar) {
         // Recupera os produtos do carrinho
         const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
+        // VERIFICA SE O CARRINHO ESTÁ VAZIO
+        if (carrinho.length === 0) {
+            btnFinalizar.disabled = true;
+            btnFinalizar.textContent = "Processando pedido...";
+            try {
+                // Envia o carrinho vazio para a API
+                await requisicaoAPI("/api/checkout", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        itens: []
+                    })
+                });
+
+            } catch (erro) {
+                console.error("Erro ao finalizar pedido:", erro);
+                const carrinhoVazio = document.querySelector("#carrinhoVazio");
+                if (carrinhoVazio && erro.status === 400) {
+                    carrinhoVazio.textContent = "Erro " + erro.status + " - " + erro.message;
+                    const modal = new bootstrap.Modal(
+                        document.getElementById("modalCarrinhoVazio")
+                    );
+                    modal.show();
+                } else { mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro");
+                }
+            } finally {
+                btnFinalizar.disabled = false;
+                btnFinalizar.textContent = "Finalizar Pedido";
+            }
+            return;
+        }
+
+        
+        // VALIDA O ENDEREÇO DE ENTREGA
+        const usuarioCheckout = JSON.parse(dadosUsuario);
+
+        // Recupera os endereços cadastrados para o usuário
+        const chaveEnderecosCheckout = "enderecos_" + usuarioCheckout.email.toLowerCase();
+
+        const enderecosCheckout = JSON.parse(localStorage.getItem(chaveEnderecosCheckout)) || [];
+
+        // Recupera o endereço selecionado no carrinho
+        const idEndereco = selectEnderecoEntrega
+            ? selectEnderecoEntrega.value
+            : "";
+
+        // Localiza o endereço correspondente
+        const enderecoSelecionado = enderecosCheckout.find(function (endereco) {
+            return String(endereco.id) === idEndereco;
+        });
+
+        // Verifica se um endereço foi selecionado
+        if (!enderecoSelecionado) {
+
+            mostrarNotificacao("Selecione um endereço de entrega válido antes de finalizar o pedido.", "aviso");
+            return;
+        }
+
+        // Confere se o CEP corresponde ao endereço selecionado
+        const cepEndereco = String(enderecoSelecionado.cep).replace(/\D/g, "");
+        const cepInformado = campoCEP.value.replace(/\D/g, "");
+
+        if (cepEndereco !== cepInformado) {
+
+            mostrarNotificacao("O CEP informado não corresponde ao endereço selecionado. Selecione novamente o endereço.", "aviso");
+            return;
+        }
 
         // Verifica o CEP informado
         const cepDigitado = campoCEP.value.trim();
@@ -1207,6 +1386,13 @@ if (btnFinalizar) {
                     };
                 }),
 
+                enderecoEntrega: {
+                    rua: enderecoSelecionado.rua,
+                    numero: enderecoSelecionado.numero,
+                    cep: enderecoSelecionado.cep,
+                    cidadeEstado: enderecoSelecionado.cidadeEstado
+                },
+
                 subtotal: subtotal,
                 desconto: desconto,
                 frete: frete,
@@ -1237,12 +1423,13 @@ if (btnFinalizar) {
 
             const carrinhoVazio = document.querySelector("#carrinhoVazio");
             if (carrinhoVazio && erro.status === 400 && carrinho.length === 0){
-                document.querySelector("#carrinhoVazio").textContent = "Erro " + erro.status + " - " + erro.message;
 
+                document.querySelector("#carrinhoVazio").textContent = "Erro " + erro.status + " - " + erro.message;
                 const modal = new bootstrap.Modal(document.getElementById("modalCarrinhoVazio"));
                 modal.show();
+
             } else{
-                // Exibe a mensagem retornada pela API
+                
                 mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro" );
 
             }
@@ -1850,6 +2037,15 @@ if (detalhesPedido) {
                             ${pedido.totalItens ?? "Não informado"}
                         </p>
 
+                        ${pedido.enderecoEntrega ? `
+                            <p>
+                                <strong>Endereço de entrega:</strong>
+                                ${pedido.enderecoEntrega.rua}, nº ${pedido.enderecoEntrega.numero}
+                                - ${pedido.enderecoEntrega.cidadeEstado}
+                                (CEP ${pedido.enderecoEntrega.cep})
+                            </p>
+                        ` : ""}
+                        
                     </div>
 
                 </div>
@@ -1972,7 +2168,7 @@ if (formDados) {
             // A API devolve os dados confirmados em dados.dados
             const usuarioNovo = mesclarUsuario(usuario, dados.dados);
 
-            migrarPedidos(usuario.email, usuarioNovo.email);
+            migrarChaves(usuario.email, usuarioNovo.email);
 
             localStorage.setItem("usuarioLogado", JSON.stringify(usuarioNovo));
 
@@ -1988,7 +2184,7 @@ if (formDados) {
     });
 }
 
-// MEUS ENDEREÇOS (somente localStorage)
+// MEUS ENDEREÇOS
 const listaEnderecos = document.querySelector("#listaEnderecos");
 
 if (listaEnderecos) {
@@ -2001,7 +2197,6 @@ if (listaEnderecos) {
 
     const usuarioEnd = JSON.parse(localStorage.getItem("usuarioLogado"));
 
-    // Sem login não há de quem listar endereços
     if (!usuarioEnd) {
 
         btnNovoEndereco.hidden = true;
