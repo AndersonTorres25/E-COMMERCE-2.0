@@ -1420,20 +1420,7 @@ if (btnFinalizar) {
 
         } catch (erro) {
             console.error("Erro ao finalizar pedido:", erro);
-
-            const carrinhoVazio = document.querySelector("#carrinhoVazio");
-            if (carrinhoVazio && erro.status === 400 && carrinho.length === 0){
-
-                document.querySelector("#carrinhoVazio").textContent = "Erro " + erro.status + " - " + erro.message;
-                const modal = new bootstrap.Modal(document.getElementById("modalCarrinhoVazio"));
-                modal.show();
-
-            } else{
-                
-                mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro" );
-
-            }
-
+            mostrarNotificacao("Erro " + erro.status + " - " + erro.message, "erro" );
             btnFinalizar.disabled = false;
             btnFinalizar.textContent = "Finalizar Pedido";
         }
