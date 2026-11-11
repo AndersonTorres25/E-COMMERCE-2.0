@@ -2329,10 +2329,12 @@ if (listaEnderecos) {
 
             e.preventDefault();
 
-            console.log("Evento submit executado!");
-            alert("O formulário foi enviado!");
+            document.body.insertAdjacentHTML(
+                "beforeend",
+                '<div style="position:fixed;top:10px;left:10px;right:10px;background:#198754;color:white;padding:20px;z-index:99999;">O evento SUBMIT foi executado!</div>'
+            );
 
-            return false;
+            alert("O formulário foi enviado!");
 
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
