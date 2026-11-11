@@ -2271,15 +2271,17 @@ if (listaEnderecos) {
 
         // Cadastrar novo endereço
         formEndereco.addEventListener("submit", function (e) {
+            alert("O evento de envio do formulário foi executado! ANTES PREVENT");
 
             e.preventDefault();
+            alert("O evento de envio do formulário foi executado! DEPOIS PREVENT");
 
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
             const cep = document.querySelector("#enderecoCep").value.trim();
             const cidadeEstado = document.querySelector("#enderecoCidade").value.trim();
 
-            // Todos os campos são obrigatórios
+            
             if (!rua || !numero || !cep || !cidadeEstado) {
                 erroEndereco.textContent = "Preencha todos os campos.";
                 erroEndereco.hidden = false;
@@ -2330,8 +2332,7 @@ if (listaEnderecos) {
 
                 console.error("Erro ao salvar endereço:", erro);
 
-                erroEndereco.textContent =
-                    "Não foi possível salvar o endereço. Verifique o armazenamento do navegador e tente novamente.";
+                erroEndereco.textContent = "Não foi possível salvar o endereço. Verifique o armazenamento do navegador e tente novamente.";
 
                 erroEndereco.hidden = false;
             }
