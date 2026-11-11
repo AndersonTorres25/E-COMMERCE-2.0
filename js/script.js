@@ -2338,7 +2338,7 @@ if (listaEnderecos) {
 
 
         // Limpa o aviso de erro sempre que o modal for aberto
-        modalEnderecoElemento.addEventListener("show.bs.modal", () => erroEndereco.hidden = true );
+        modalEnderecoElemento.addEventListener("show.bs.modal", function () { erroEndereco.hidden = true });
 
         listaEnderecos.addEventListener("click", async function (e) {
 
