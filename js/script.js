@@ -2271,10 +2271,8 @@ if (listaEnderecos) {
 
         // Cadastrar novo endereço
         formEndereco.addEventListener("submit", function (e) {
-            alert("O evento de envio do formulário foi executado! ANTES PREVENT");
 
             e.preventDefault();
-            alert("O evento de envio do formulário foi executado! DEPOIS PREVENT");
 
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
