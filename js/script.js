@@ -2170,6 +2170,7 @@ if (formDados) {
     });
 }
 
+
 // MEUS ENDEREÇOS
 const listaEnderecos = document.querySelector("#listaEnderecos");
 
@@ -2177,9 +2178,6 @@ if (listaEnderecos) {
 
     const mensagemSemEnderecos = document.querySelector("#mensagemSemEnderecos");
     const btnNovoEndereco = document.querySelector("#btnNovoEndereco");
-    const formEndereco = document.querySelector("#form-endereco");
-    const erroEndereco = document.querySelector("#erroEndereco");
-    const modalEnderecoElemento = document.querySelector("#modalEndereco");
 
     const usuarioEnd = JSON.parse(localStorage.getItem("usuarioLogado"));
 
@@ -2189,7 +2187,9 @@ if (listaEnderecos) {
 
         listaEnderecos.innerHTML = `
             <div class="col-12">
-                <div class="alert alert-warning">Faça login para ver seus endereços.</div>
+                <div class="alert alert-warning">
+                    Faça login para ver seus endereços.
+                </div>
             </div>
         `;
 
@@ -2197,89 +2197,145 @@ if (listaEnderecos) {
 
         const chaveEnderecos = "enderecos_" + usuarioEnd.email.toLowerCase();
 
-        const lerEnderecos = () => JSON.parse(localStorage.getItem(chaveEnderecos)) || [];
+        const lerEnderecos = () =>
+            JSON.parse(localStorage.getItem(chaveEnderecos)) || [];
 
-        const salvarEnderecos = (lista) => localStorage.setItem(chaveEnderecos, JSON.stringify(lista));
+        const salvarEnderecos = (lista) =>
+            localStorage.setItem(chaveEnderecos, JSON.stringify(lista));
 
-        // Troca caracteres especiais por texto seguro, já que o usuário digita esses dados
-        const escaparHTML = (texto) => String(texto).replace(/[&<>"']/g, (c) => ({
-            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-        }[c]));
+        // Cria o modal pelo JavaScript
+        const modalHTML = `
+            <div class="modal fade" id="modalEndereco"
+                tabindex="-1" aria-hidden="true">
 
-        const criarCardEndereco = (endereco) => `
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
 
-                        <input type="hidden" class="endereco-id" value="${endereco.id}">
+                        <form id="form-endereco">
 
-                        <p class="mb-1"><strong>Rua:</strong> ${escaparHTML(endereco.rua)}, nº ${escaparHTML(endereco.numero)}</p>
-                        <p class="mb-1"><strong>CEP:</strong> ${escaparHTML(endereco.cep)}</p>
-                        <p class="mb-3"><strong>Cidade/Estado:</strong> ${escaparHTML(endereco.cidadeEstado)}</p>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Novo endereço</h5>
 
-                        <button type="button" class="btn btn-outline-danger btn-sm btn-excluir-endereco">
-                            <i class="bi bi-trash"></i> Excluir Endereço
-                        </button>
+                                <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal">
+                                </button>
+                            </div>
+
+                            <div class="modal-body">
+
+                                <div id="erroEndereco"
+                                    class="alert alert-danger"
+                                    hidden>
+                                </div>
+
+                                <input type="text"
+                                    id="enderecoRua"
+                                    class="form-control mb-3"
+                                    placeholder="Rua"
+                                    required>
+
+                                <input type="text"
+                                    id="enderecoNumero"
+                                    class="form-control mb-3"
+                                    placeholder="Número"
+                                    required>
+
+                                <input type="text"
+                                    id="enderecoCep"
+                                    class="form-control mb-3"
+                                    placeholder="CEP"
+                                    maxlength="9"
+                                    required>
+
+                                <input type="text"
+                                    id="enderecoCidade"
+                                    class="form-control"
+                                    placeholder="Cidade/Estado"
+                                    required>
+
+                            </div>
+
+                            <div class="modal-footer">
+
+                                <button type="button"
+                                    class="btn btn-secondary"
+                                    data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+
+                                <button type="submit"
+                                    class="btn btn-success">
+                                    Salvar endereço
+                                </button>
+
+                            </div>
+
+                        </form>
 
                     </div>
                 </div>
             </div>
         `;
 
+        // Adiciona o modal à página
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+        const formEndereco = document.querySelector("#form-endereco");
+        const erroEndereco = document.querySelector("#erroEndereco");
+        const modalEnderecoElemento = document.querySelector("#modalEndereco");
+
+        const modalEndereco = new bootstrap.Modal(modalEnderecoElemento);
+
+        // Abre o modal pelo botão Novo Endereço
+        btnNovoEndereco.addEventListener("click", function () {
+            modalEndereco.show();
+        });
+
+        // Exibe os endereços cadastrados
         function renderizarEnderecos() {
 
             const enderecos = lerEnderecos();
 
             mensagemSemEnderecos.hidden = enderecos.length > 0;
 
-            listaEnderecos.innerHTML = enderecos.map(criarCardEndereco).join("");
+            listaEnderecos.innerHTML = enderecos.map(function (endereco) {
+                return `
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+
+                                <p><strong>Rua:</strong> ${endereco.rua}, nº ${endereco.numero}</p>
+                                <p><strong>CEP:</strong> ${endereco.cep}</p>
+                                <p><strong>Cidade/Estado:</strong> ${endereco.cidadeEstado}</p>
+
+                                <button type="button"
+                                    class="btn btn-outline-danger btn-sm btn-excluir-endereco"
+                                    data-id="${endereco.id}">
+                                    Excluir endereço
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
 
         renderizarEnderecos();
 
-        //Cadastrar novo endereço
-     /*   formEndereco.addEventListener("submit", function (e) {
-
-            e.preventDefault();
-
-            const rua = document.querySelector("#enderecoRua").value.trim();
-            const numero = document.querySelector("#enderecoNumero").value.trim();
-            const cep = document.querySelector("#enderecoCep").value.trim();
-            const cidadeEstado = document.querySelector("#enderecoCidade").value.trim();
-
-            // Todos os campos são obrigatórios
-            if (!rua || !numero || !cep || !cidadeEstado) {
-                erroEndereco.textContent = "Preencha todos os campos.";
-                erroEndereco.hidden = false;
-                return;
-            }
-
-            erroEndereco.hidden = true;
-
-            const novoEndereco = { id: Date.now(), rua, numero, cep, cidadeEstado };
-
-            // [...lista, novo] cria uma lista nova com o endereço no final
-            salvarEnderecos([...lerEnderecos(), novoEndereco]);
-
-            formEndereco.reset();
-
-            bootstrap.Modal.getInstance(modalEnderecoElemento).hide();
-
-            renderizarEnderecos();
-        }); */
-
-
-        // Cadastrar novo endereço
+        // Cadastra o endereço
         formEndereco.addEventListener("submit", function (e) {
 
             e.preventDefault();
 
+            alert("O JavaScript recebeu o envio do formulário!");
+
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
             const cep = document.querySelector("#enderecoCep").value.trim();
             const cidadeEstado = document.querySelector("#enderecoCidade").value.trim();
 
-            
             if (!rua || !numero || !cep || !cidadeEstado) {
                 erroEndereco.textContent = "Preencha todos os campos.";
                 erroEndereco.hidden = false;
@@ -2287,8 +2343,6 @@ if (listaEnderecos) {
             }
 
             try {
-
-                erroEndereco.hidden = true;
 
                 const novoEndereco = {
                     id: Date.now(),
@@ -2298,61 +2352,54 @@ if (listaEnderecos) {
                     cidadeEstado: cidadeEstado
                 };
 
-                // Recupera os endereços e adiciona o novo
                 const enderecos = lerEnderecos();
 
                 enderecos.push(novoEndereco);
 
-                // Salva no armazenamento do navegador
                 salvarEnderecos(enderecos);
 
-                // Confere se o endereço foi realmente salvo
-                const enderecosSalvos = lerEnderecos();
-
-                if (!enderecosSalvos.some(function (endereco) {
-                    return endereco.id === novoEndereco.id;
-                })) {
-                    throw new Error("Não foi possível confirmar o salvamento do endereço.");
-                }
-
-                // Atualiza a lista na tela
                 renderizarEnderecos();
 
-                // Limpa o formulário
                 formEndereco.reset();
 
-                // Fecha o modal
-                bootstrap.Modal.getOrCreateInstance(modalEnderecoElemento).hide();
+                modalEndereco.hide();
 
-                mostrarNotificacao("Endereço cadastrado com sucesso!", "sucesso");
+                mostrarNotificacao(
+                    "Endereço cadastrado com sucesso!",
+                    "sucesso"
+                );
 
             } catch (erro) {
 
-                console.error("Erro ao salvar endereço:", erro);
+                console.error("Erro ao cadastrar endereço:", erro);
 
-                erroEndereco.textContent = "Não foi possível salvar o endereço. Verifique o armazenamento do navegador e tente novamente.";
+                erroEndereco.textContent =
+                    "Não foi possível salvar o endereço.";
 
                 erroEndereco.hidden = false;
             }
         });
 
-
-        // Limpa o aviso de erro sempre que o modal for aberto
-        modalEnderecoElemento.addEventListener("show.bs.modal", function () { erroEndereco.hidden = true });
-
+        // Exclui um endereço
         listaEnderecos.addEventListener("click", async function (e) {
 
             const botao = e.target.closest(".btn-excluir-endereco");
 
             if (!botao) return;
 
-            const id = botao.closest(".card").querySelector(".endereco-id").value;
-
-            const confirmou = await confirmarAcao("Deseja excluir este endereço?");
+            const confirmou = await confirmarAcao(
+                "Deseja excluir este endereço?"
+            );
 
             if (!confirmou) return;
 
-            salvarEnderecos(lerEnderecos().filter((endereco) => String(endereco.id) !== id));
+            const id = botao.dataset.id;
+
+            salvarEnderecos(
+                lerEnderecos().filter(function (endereco) {
+                    return String(endereco.id) !== id;
+                })
+            );
 
             renderizarEnderecos();
         });
