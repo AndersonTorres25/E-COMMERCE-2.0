@@ -2329,7 +2329,10 @@ if (listaEnderecos) {
 
             e.preventDefault();
 
-            alert("O JavaScript recebeu o envio do formulário!");
+            console.log("Evento submit executado!");
+            alert("O formulário foi enviado!");
+
+            return false;
 
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
