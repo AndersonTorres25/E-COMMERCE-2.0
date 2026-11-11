@@ -757,6 +757,8 @@ let requisicaoFrete = 0;
 
 let cupomAplicado = null;
 
+let codigoCupomAplicado = null;
+
 const campoCupom = document.querySelector("#codigoCupom");
 const btnAplicarCupom = document.querySelector("#btnAplicarCupom");
 const mensagemCupom = document.querySelector("#mensagemCupom");
@@ -1031,6 +1033,8 @@ if (btnAplicarCupom) {
 
             cupomAplicado = dados.cupom;
 
+            codigoCupomAplicado = codigo;
+
             console.log("Cupom retornado pela API:", dados.cupom);
             console.log("Subtotal do carrinho:", subtotal);
 
@@ -1045,6 +1049,8 @@ if (btnAplicarCupom) {
             console.error("Erro ao aplicar cupom:", erro);
 
             cupomAplicado = null;
+
+            codigoCupomAplicado = null;
 
             atualizarResumoCarrinho();
 
@@ -1070,6 +1076,9 @@ if (btnRemoverCupom) {
         }
 
         cupomAplicado = null;
+
+        codigoCupomAplicado = null;
+
         atualizarBotaoRemoverCupom();
 
         campoCupom.value = "";
@@ -1115,13 +1124,38 @@ function ativarCamposQuantidade() {
 
             localStorage.setItem("carrinho", JSON.stringify(carrinho));
 
+            // Calcula novamente o subtotal
+            let subtotal = 0;
+
+            carrinho.forEach(function (produto) {
+
+                subtotal += produto.preco * produto.quantidade;
+
+            });
+
+            // Verifica se o VIP50 continua válido
+            if (codigoCupomAplicado === "VIP50" && subtotal < 500) {
+
+                cupomAplicado = null;
+
+                codigoCupomAplicado = null;
+
+                campoCupom.value = "";
+
+                mensagemCupom.textContent =
+                    "Cupom VIP50 removido: o subtotal mínimo de R$ 500,00 não foi atingido.";
+
+                mensagemCupom.className = "mt-2 text-warning";
+
+                atualizarBotaoRemoverCupom();
+            }
+
             atualizarCarrinho();
 
             atualizarResumoCarrinho();
         });
     });
 }
-
 
 //Remover produto do carrinho
 const botoesRemover = document.querySelectorAll(".btn-remover");
