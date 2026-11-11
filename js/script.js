@@ -2238,7 +2238,7 @@ if (listaEnderecos) {
         renderizarEnderecos();
 
         //Cadastrar novo endereço
-        formEndereco.addEventListener("submit", function (e) {
+     /*   formEndereco.addEventListener("submit", function (e) {
 
             e.preventDefault();
 
@@ -2266,7 +2266,77 @@ if (listaEnderecos) {
             bootstrap.Modal.getInstance(modalEnderecoElemento).hide();
 
             renderizarEnderecos();
+        }); */
+
+
+        // Cadastrar novo endereço
+        formEndereco.addEventListener("submit", function (e) {
+
+            e.preventDefault();
+
+            const rua = document.querySelector("#enderecoRua").value.trim();
+            const numero = document.querySelector("#enderecoNumero").value.trim();
+            const cep = document.querySelector("#enderecoCep").value.trim();
+            const cidadeEstado = document.querySelector("#enderecoCidade").value.trim();
+
+            // Todos os campos são obrigatórios
+            if (!rua || !numero || !cep || !cidadeEstado) {
+                erroEndereco.textContent = "Preencha todos os campos.";
+                erroEndereco.hidden = false;
+                return;
+            }
+
+            try {
+
+                erroEndereco.hidden = true;
+
+                const novoEndereco = {
+                    id: Date.now(),
+                    rua: rua,
+                    numero: numero,
+                    cep: cep,
+                    cidadeEstado: cidadeEstado
+                };
+
+                // Recupera os endereços e adiciona o novo
+                const enderecos = lerEnderecos();
+
+                enderecos.push(novoEndereco);
+
+                // Salva no armazenamento do navegador
+                salvarEnderecos(enderecos);
+
+                // Confere se o endereço foi realmente salvo
+                const enderecosSalvos = lerEnderecos();
+
+                if (!enderecosSalvos.some(function (endereco) {
+                    return endereco.id === novoEndereco.id;
+                })) {
+                    throw new Error("Não foi possível confirmar o salvamento do endereço.");
+                }
+
+                // Atualiza a lista na tela
+                renderizarEnderecos();
+
+                // Limpa o formulário
+                formEndereco.reset();
+
+                // Fecha o modal
+                bootstrap.Modal.getOrCreateInstance(modalEnderecoElemento).hide();
+
+                mostrarNotificacao("Endereço cadastrado com sucesso!", "sucesso");
+
+            } catch (erro) {
+
+                console.error("Erro ao salvar endereço:", erro);
+
+                erroEndereco.textContent =
+                    "Não foi possível salvar o endereço. Verifique o armazenamento do navegador e tente novamente.";
+
+                erroEndereco.hidden = false;
+            }
         });
+
 
         // Limpa o aviso de erro sempre que o modal for aberto
         modalEnderecoElemento.addEventListener("show.bs.modal", () => erroEndereco.hidden = true );
