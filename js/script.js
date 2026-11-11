@@ -2270,9 +2270,9 @@ if (listaEnderecos) {
 
 
         // Cadastrar novo endereço
-        formEndereco.addEventListener("submit", function (e) {
+        const btnSalvarEndereco = document.querySelector("#btnSalvarEndereco");
 
-            e.preventDefault();
+        btnSalvarEndereco.addEventListener("click", function () {
 
             const rua = document.querySelector("#enderecoRua").value.trim();
             const numero = document.querySelector("#enderecoNumero").value.trim();
@@ -2315,13 +2315,10 @@ if (listaEnderecos) {
                     throw new Error("Não foi possível confirmar o salvamento do endereço.");
                 }
 
-                // Atualiza a lista na tela
                 renderizarEnderecos();
 
-                // Limpa o formulário
                 formEndereco.reset();
-
-                // Fecha o modal
+                
                 bootstrap.Modal.getOrCreateInstance(modalEnderecoElemento).hide();
 
                 mostrarNotificacao("Endereço cadastrado com sucesso!", "sucesso");
