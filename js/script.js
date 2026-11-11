@@ -7,7 +7,7 @@ async function requisicaoAPI(endpoint, opcoes = {}) {
     const dados = await resposta.json();
 
      if (!resposta.ok || dados.sucesso === false) {
-        const erro = new Error(
+            const erro = new Error(
             dados.mensagem || "Erro HTTP: " + resposta.status
         );
 
@@ -18,7 +18,6 @@ async function requisicaoAPI(endpoint, opcoes = {}) {
 
     return dados;
 }
-
 
 // Cria o modal de notificações automaticamente
 const elementoNotificacao = document.createElement("div");
