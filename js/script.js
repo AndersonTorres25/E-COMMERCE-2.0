@@ -196,6 +196,8 @@ elementoNotificacao.addEventListener(
     }
 );
 
+const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
 // LOGIN do usuário
 const formulario = document.querySelector("#form-login");
 
@@ -203,7 +205,7 @@ if (formulario) {
     formulario.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        const email = document.querySelector("#email").value;
+        const email = document.querySelector("#email").value.trim().toLowerCase();
         const senha = document.querySelector("#senha").value;
 
         try {
@@ -218,15 +220,6 @@ if (formulario) {
                 })
             });
             console.log("Resposta da API:", dados);
-
-            if (dados.sucesso === false || !dados.usuario) {
-                const erro = new Error(
-                    dados.mensagem || "E-mail ou senha inválidos."
-                );
-
-                erro.status = 401;
-                throw erro;
-            }
 
             localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
@@ -300,7 +293,6 @@ if (btnSair) {
     });
 }
 
-
 //Check mostrar senha
 const mostrar = document.querySelector("#mostrarSenha");
 
@@ -327,8 +319,8 @@ if (formularioCadastro) {
 
         e.preventDefault();
 
-        const nome = document.querySelector("#nome").value;
-        const email = document.querySelector("#email").value;
+        const nome = document.querySelector("#nome").value.trim();
+        const email = document.querySelector("#email").value.trim().toLowerCase();
         const senha = document.querySelector("#senha").value;
         const confirmarSenha = document.querySelector("#confirmarSenha").value;
 
@@ -348,6 +340,21 @@ if (formularioCadastro) {
                     confirmacaoSenha: confirmarSenha
                 })
             });
+
+            const usuarioExistente = usuarios.find(usuario => usuario.email.toLowerCase() === email);
+
+            if (usuarioExistente) {
+                mostrarNotificacao("Este e-mail já está cadastrado!", "aviso");
+                return;
+            }
+
+            usuarios.push({
+                nome: nome,
+                email: email,
+                senha: senha
+            });
+
+            localStorage.setItem("usuarios", JSON.stringify(usuarios));
 
             const cadastroSucesso = document.getElementById("cadastroSucesso");
             if(cadastroSucesso){
@@ -1142,8 +1149,7 @@ function ativarCamposQuantidade() {
 
                 campoCupom.value = "";
 
-                mensagemCupom.textContent =
-                    "Cupom VIP50 removido: o subtotal mínimo de R$ 500,00 não foi atingido.";
+                mensagemCupom.textContent = "Cupom VIP50 removido: o subtotal mínimo de R$ 500,00 não foi atingido.";
 
                 mensagemCupom.className = "mt-2 text-warning";
 
@@ -1356,22 +1362,15 @@ if (btnFinalizar) {
         btnFinalizar.textContent = "Processando pedido...";
 
         try {
-
             // Envia o pedido para a API
             const dados = await requisicaoAPI("/api/checkout", {
-
                 method: "POST",
-
                 headers: {
                     "Content-Type": "application/json"
                 },
-
                 body: JSON.stringify(corpo)
-
             });
-
             let subtotal = 0;
-
             carrinho.forEach(function (produto) {
                 subtotal += produto.preco * produto.quantidade;
             });
@@ -2185,7 +2184,6 @@ if (formDados) {
                 body: JSON.stringify(montarCorpo(campoNome.value, campoEmail.value))
             });
 
-            // A API devolve os dados confirmados em dados.dados
             const usuarioNovo = mesclarUsuario(usuario, dados.dados);
 
             migrarChaves(usuario.email, usuarioNovo.email);
