@@ -221,6 +221,13 @@ if (formulario) {
             });
             console.log("Resposta da API:", dados);
 
+            const usuarioEmailSenha = usuarios.find(u => u.email.toLowerCase() === email && u.senha === senha);
+
+            if(!usuarioEmailSenha){
+                mostrarNotificacao("E-mail ou senha errados. Por favor tente outra vez.", "aviso");
+                return;
+            }
+
             localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
 
             const loginSucesso = document.querySelector("#loginSucesso");
